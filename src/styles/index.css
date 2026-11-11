@@ -1,0 +1,131 @@
+@import "tailwindcss";
+
+/* Aeolus design tokens. Dark is the default; light overrides below. */
+:root,
+[data-theme="dark"] {
+  --bg: #101114;
+  --bg-2: #17191e;
+  --surface: #1e2027;
+  --surface-hover: #23262e;
+  --border: #292c34;
+  --text: #f4f4f5;
+  --text-2: #92949e;
+  --text-3: #656873;
+  --success: #36b37e;
+  --warning: #e9a23b;
+  --error: #e45b5b;
+  --accent: #ff861f;
+  --accent-2: #ffab45;
+  --accent-contrast: #16110b;
+  --shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  --bg: #f6f6f7;
+  --bg-2: #ffffff;
+  --surface: #ffffff;
+  --surface-hover: #f1f1f3;
+  --border: #e3e4e8;
+  --text: #17181c;
+  --text-2: #5d606b;
+  --text-3: #8b8e98;
+  --shadow: 0 8px 30px rgba(20, 20, 30, 0.08);
+  --accent-contrast: #ffffff;
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-2: var(--bg-2);
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
+  --color-line: var(--border);
+  --color-fg: var(--text);
+  --color-fg-2: var(--text-2);
+  --color-fg-3: var(--text-3);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--error);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-on-accent: var(--accent-contrast);
+  --font-sans: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "Cascadia Mono", "Consolas", ui-monospace, monospace;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  overflow: hidden;
+}
+
+input,
+textarea,
+select,
+.selectable {
+  user-select: text;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 70%, transparent);
+  outline-offset: 2px;
+}
+
+html.no-anim *,
+html.no-anim *::before,
+html.no-anim *::after {
+  transition: none !important;
+  animation: none !important;
+}
+
+.bg-glow {
+  background:
+    radial-gradient(900px 380px at 85% -10%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 70%),
+    var(--bg);
+}
+
+.bg-grid {
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 32px 32px;
+  background-position: -1px -1px;
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.35), transparent 60%);
+}
+
+@keyframes aeolus-drift {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(4px); }
+}
+.logo-drift {
+  animation: aeolus-drift 3.2s ease-in-out infinite;
+}
+
+@keyframes aeolus-indeterminate {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(250%); }
+}
+.progress-indeterminate {
+  animation: aeolus-indeterminate 1.3s ease-in-out infinite;
+}

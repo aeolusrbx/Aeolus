@@ -1,0 +1,53 @@
+{
+  "id": "dev.aeolus.example.graphics-presets",
+  "name": "Graphics Presets",
+  "version": "1.0.0",
+  "description": "Example plugin: contributes Fast Flag presets built only from Roblox-allowlisted flags, and shows a notification when Roblox launches.",
+  "author": "Aeolus",
+  "aeolusApi": 1,
+  "permissions": ["log", "notifications", "fastflags.presets", "launch.hooks"],
+  "dependencies": [],
+  "contributes": {
+    "configuration": [
+      {
+        "key": "launchMessage",
+        "label": "Launch message",
+        "type": "string",
+        "default": "Have a good session!",
+        "description": "Shown in a notification when Roblox starts."
+      }
+    ],
+    "fastFlagPresets": [
+      {
+        "name": "Crisp textures",
+        "description": "Forces the highest texture quality.",
+        "flags": {
+          "DFFlagTextureQualityOverrideEnabled": true,
+          "DFIntTextureQualityOverride": 3
+        }
+      },
+      {
+        "name": "Gray sky, no grass",
+        "description": "A cleaner look with less to render.",
+        "flags": {
+          "FFlagDebugSkyGray": true,
+          "FIntFRMMinGrassDistance": 0,
+          "FIntFRMMaxGrassDistance": 0
+        }
+      },
+      {
+        "name": "Prefer Direct3D 11",
+        "description": "Asks Roblox to use the Direct3D 11 renderer.",
+        "flags": {
+          "FFlagDebugGraphicsPreferD3D11": true
+        }
+      }
+    ],
+    "hooks": {
+      "onEnable": [{ "action": "log", "message": "Graphics Presets enabled" }],
+      "onDisable": [{ "action": "log", "message": "Graphics Presets disabled" }],
+      "beforeLaunch": [{ "action": "log", "message": "Launching Roblox with Graphics Presets active" }],
+      "afterLaunch": [{ "action": "notify", "title": "Roblox started", "message": "{{config.launchMessage}}" }]
+    }
+  }
+}
