@@ -109,6 +109,7 @@ _Last updated: 2026-11-11 (v0.1.0)_
 | Start minimized | Implemented | |
 | Native notifications with preferences | Implemented | |
 | Single instance (forwards links) | Implemented | |
+| Discord Rich Presence (toggle, profile name, play time) | Implemented | text/settings unit-tested (R); not yet seen in Discord |
 | roblox-player link handler with restore of previous handler | Implemented | |
 | Self-updater (feed, SHA-256 verify, run installer after exit) | Tested (W) | 0.1.0 → 0.1.1 from GitHub Releases on 2026-11-11 |
 

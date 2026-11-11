@@ -2,6 +2,15 @@
 
 All notable changes to Aeolus are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/) and the project uses semantic versioning.
 
+## [0.1.2] — 2026-11-11
+
+### Added
+- Discord Rich Presence: while Roblox (started from Aeolus) is running, your Discord profile shows "Playing Aeolus · Running Roblox with Aeolus" with the Aeolus logo, elapsed time and a "Get Aeolus" button. Turn it on or off in Settings → Launch → Discord, and choose whether to show the profile name.
+- Recent activity records how long you played when Roblox closes.
+
+### Changed
+- A missing release feed (404) now explains itself instead of suggesting a network problem.
+
 ## [0.1.1] — 2026-11-11
 
 ### Added

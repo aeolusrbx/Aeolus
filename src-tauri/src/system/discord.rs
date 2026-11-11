@@ -13,7 +13,7 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 /// Discord application that owns the "Aeolus" name and the `aeolus` art asset.
-pub const DISCORD_APP_ID: &str = "";
+pub const DISCORD_APP_ID: &str = "1570171109771313212";
 pub const LARGE_IMAGE_KEY: &str = "aeolus";
 pub const PROJECT_URL: &str = "https://github.com/aeolusrbx/Aeolus";
 
@@ -157,7 +157,7 @@ mod tests {
     }
 
     #[test]
-    fn presence_without_app_id_is_inert() {
+    fn presence_worker_survives_without_discord() {
         let d = tempfile::tempdir().unwrap();
         let p = Presence::start(Arc::new(Logger::new(d.path().into())));
         p.set(Some(presence_for(None, true, 1)));
