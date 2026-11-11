@@ -7,6 +7,8 @@ pub mod error;
 pub mod fastflags;
 pub mod installation;
 pub mod launcher;
+pub mod mods;
+pub mod overlay;
 pub mod paths;
 pub mod plugins;
 pub mod profiles;
@@ -200,6 +202,12 @@ pub fn run() {
             commands::skies::sky_rename,
             commands::skies::sky_delete,
             commands::skies::sky_set_global,
+            commands::mods::mods_overview,
+            commands::mods::mod_set_file,
+            commands::mods::mod_set_preset,
+            commands::mods::mod_set_enabled,
+            commands::mods::mod_clear,
+            commands::mods::mods_reset_all,
         ])
         .build(tauri::generate_context!())
         .expect("error while building Aeolus")

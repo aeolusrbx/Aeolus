@@ -371,7 +371,7 @@ pub fn verify(dir: &Path, full: bool, cancel: &CancelToken, progress: &dyn Fn(us
             return Ok(r);
         }
     };
-    let overlay = crate::skies::read_overlay(dir).files;
+    let overlay = crate::overlay::read_overlay(dir).files;
     let n = idx.files.len();
     for (i, f) in idx.files.iter().enumerate() {
         cancel.check()?;

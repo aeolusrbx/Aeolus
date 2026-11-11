@@ -25,11 +25,13 @@ pub struct LaunchPrefs {
     pub update_before_launch: bool,
     /// Run a quick (size-based) integrity check before launching.
     pub verify_before_launch: bool,
+    /// Apply your sounds, cursors and fonts from the Mods page.
+    pub apply_mods: bool,
     pub after_launch: AfterLaunch,
 }
 impl Default for LaunchPrefs {
     fn default() -> Self {
-        Self { apply_fast_flags: true, update_before_launch: true, verify_before_launch: false, after_launch: AfterLaunch::Nothing }
+        Self { apply_fast_flags: true, update_before_launch: true, verify_before_launch: false, apply_mods: true, after_launch: AfterLaunch::Nothing }
     }
 }
 

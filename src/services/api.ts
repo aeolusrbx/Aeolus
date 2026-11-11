@@ -99,6 +99,14 @@ export const api = {
   skyDelete: (id: string) => call<void>("sky_delete", { id }),
   skySetGlobal: (id: string | null) => call<string | null>("sky_set_global", { id }),
 
+  // mods
+  modsOverview: () => call<T.ModSlot[]>("mods_overview"),
+  modSetFile: (slot: string, path: string) => call<void>("mod_set_file", { slot, path }),
+  modSetPreset: (slot: string, preset: string) => call<void>("mod_set_preset", { slot, preset }),
+  modSetEnabled: (slot: string, enabled: boolean) => call<void>("mod_set_enabled", { slot, enabled }),
+  modClear: (slot: string) => call<void>("mod_clear", { slot }),
+  modsResetAll: () => call<void>("mods_reset_all"),
+
   // backups
   backupsOverview: () => call<T.BackupEntry[]>("backups_overview"),
   restoreBackup: (category: string, id: string) => call<void>("restore_backup", { category, id }),

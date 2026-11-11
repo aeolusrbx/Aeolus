@@ -42,7 +42,7 @@ export function createState() {
     defaultId: "p1",
     activeId: "p1",
     profiles: [
-      { id: "p1", name: "Default", description: "Standard launch", icon: "wind", accent: "#FF861F", fastFlagProfileId: null, sky: null, launch: { applyFastFlags: true, updateBeforeLaunch: true, verifyBeforeLaunch: false, afterLaunch: "nothing" }, createdAt: ago(5000), lastUsedAt: ago(42) },
+      { id: "p1", name: "Default", description: "Standard launch", icon: "wind", accent: "#FF861F", fastFlagProfileId: null, sky: null, launch: { applyFastFlags: true, updateBeforeLaunch: true, verifyBeforeLaunch: false, applyMods: true, afterLaunch: "nothing" }, createdAt: ago(5000), lastUsedAt: ago(42) },
       { id: "p2", name: "Competitive", description: "Low latency, low detail", icon: "zap", accent: "#3E8EF7", fastFlagProfileId: "f3", sky: null, launch: { applyFastFlags: true, updateBeforeLaunch: true, verifyBeforeLaunch: true, afterLaunch: "minimize" }, createdAt: ago(3000), lastUsedAt: null },
     ],
   };
@@ -86,7 +86,13 @@ export function createState() {
     },
   ];
   const skies: Any[] = [{ id: "s1", name: "Sunset", files: ["sky512_bk.tex", "sky512_dn.tex", "sky512_ft.tex", "sky512_lf.tex", "sky512_rt.tex", "sky512_up.tex"], createdAt: ago(100), preview: null, previewUrl: null }];
-  return { settings, flags, profiles, install, activity, logs, plugins, skies, launches: [] as Any[], calls: [] as { cmd: string; args: Any }[] };
+  const mods: Any[] = [
+    { id: "death", kind: "sound", label: "Death sound", description: "Plays when your character dies.", targets: ["content/sounds/ouch.ogg"], presets: [{ id: "classic-oof", label: "Classic oof" }], choice: null, previewUrl: null, presetPreviews: [["classic-oof", null]] },
+    { id: "jump", kind: "sound", label: "Jump", description: "When you jump.", targets: ["content/sounds/action_jump.mp3"], presets: [], choice: null, previewUrl: null, presetPreviews: [] },
+    { id: "cursor", kind: "cursor", label: "Cursor", description: "Roblox's default mouse cursor.", targets: ["content/textures/ArrowCursor.png"], presets: [{ id: "dot", label: "Dot" }, { id: "crosshair", label: "Crosshair" }], choice: null, previewUrl: null, presetPreviews: [["dot", null], ["crosshair", null]] },
+    { id: "font", kind: "font", label: "Interface font", description: "Replaces Builder Sans.", targets: ["content/fonts/BuilderSans-Regular.otf"], presets: [], choice: null, previewUrl: null, presetPreviews: [] },
+  ];
+  return { settings, flags, profiles, install, activity, logs, plugins, skies, mods, launches: [] as Any[], calls: [] as { cmd: string; args: Any }[] };
 }
 
 export type MockState = ReturnType<typeof createState>;
@@ -206,6 +212,23 @@ export function handler(s: MockState) {
         const p = { ...args.input, id: "p" + Date.now(), createdAt: now(), lastUsedAt: null };
         s.profiles.profiles.push(p);
         return p;
+      }
+      case "mods_overview":
+        return s.mods;
+      case "mod_set_preset": {
+        const m = s.mods.find((x: Any) => x.id === args.slot) as Any;
+        m.choice = { enabled: true, file: null, originalName: null, preset: args.preset, updatedAt: now() };
+        return null;
+      }
+      case "mod_set_enabled": {
+        const m = s.mods.find((x: Any) => x.id === args.slot) as Any;
+        m.choice.enabled = args.enabled;
+        return null;
+      }
+      case "mod_clear": {
+        const m = s.mods.find((x: Any) => x.id === args.slot) as Any;
+        m.choice = null;
+        return null;
       }
       case "skies_overview":
         return { packs: s.skies, globalPackId: s.settings.mods.skyPackId, appliedPackId: s.settings.mods.skyPackId, appliedPackName: s.skies.find((k) => k.id === s.settings.mods.skyPackId)?.name ?? null };

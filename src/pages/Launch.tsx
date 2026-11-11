@@ -136,6 +136,7 @@ export default function Launch() {
                     {p.sky && <Badge>{p.sky === "default" ? "Roblox sky" : `Sky: ${skies.data?.packs.find((s) => s.id === p.sky)?.name ?? "missing"}`}</Badge>}
                     {p.launch.updateBeforeLaunch && <Badge>Auto-update</Badge>}
                     {p.launch.verifyBeforeLaunch && <Badge>Verify</Badge>}
+                    {p.launch.applyMods === false && <Badge>No mods</Badge>}
                     {p.launch.afterLaunch !== "nothing" && <Badge>{p.launch.afterLaunch === "close" ? "Close after launch" : "Minimize after launch"}</Badge>}
                   </div>
                   <div className="mt-2 text-[11px] text-fg-3">Created {formatDate(p.createdAt)} · Last used {relativeTime(p.lastUsedAt)}</div>

@@ -283,7 +283,9 @@ pub async fn launch(app: &AppHandle, link: Option<String>, profile_id: Option<St
             let n = crate::fastflags::apply_to_install(&target.dir, &flags, &state.backups)?;
             state.logger.info("launch", format!("Applied {n} Fast Flags from {}", flag_profile.as_ref().map(|f| f.name.as_str()).unwrap_or("no profile")));
         }
-        apply_sky_for(&state, profile.as_ref().and_then(|p| p.sky.as_deref()), &target.dir);
+        if let Err(e) = apply_content(&state, profile.as_ref().and_then(|p| p.sky.as_deref()), prefs.apply_mods, &target.dir) {
+            state.logger.warn("mods", format!("Could not apply sky/mods: {e}"));
+        }
         run_hooks(app, "beforeLaunch", None);
         let (pid, child) = launcher::spawn_and_watch(&launcher::player_exe(&target.dir), &args, std::time::Duration::from_secs(6)).await?;
         Ok((pid, child, target))
@@ -404,27 +406,52 @@ pub fn refresh_presence(app: &AppHandle) {
     state.presence.set(info);
 }
 
-/// Apply the sky chosen by the profile (or the global sky) to an installation.
-/// Sky problems are logged but never stop Roblox from launching.
-pub fn apply_sky_for(state: &AppState, profile_sky: Option<&str>, install: &std::path::Path) {
+/// Write the sky and mods for a launch into an installation. Problems are
+/// logged but never stop Roblox from launching.
+pub fn apply_content(state: &AppState, profile_sky: Option<&str>, apply_mods: bool, install: &std::path::Path) -> AppResult<crate::overlay::SyncReport> {
     let global = state.settings().mods.sky_pack_id;
     let wanted = crate::skies::resolve(profile_sky, global.as_deref());
     let pack = match wanted.as_deref().map(|id| state.skies.get(id)) {
         Some(Ok(p)) => Some(p),
         Some(Err(_)) => {
-            state.logger.warn("skies", "The selected sky pack no longer exists; using Roblox's sky");
+            state.logger.warn("mods", "The selected sky pack no longer exists; using Roblox's sky");
             None
         }
         None => None,
     };
-    match crate::skies::apply(install, &state.skies, pack.as_ref()) {
-        Ok((0, _)) => {}
-        Ok((n, skipped)) => {
-            state.logger.info("skies", format!("Applied sky '{}' ({n} files)", pack.as_ref().map(|p| p.name.as_str()).unwrap_or("Roblox default")));
-            if !skipped.is_empty() {
-                state.logger.warn("skies", format!("Skipped files Roblox doesn't use: {}", skipped.join(", ")));
-            }
-        }
-        Err(e) => state.logger.warn("skies", format!("Could not apply the sky: {e}")),
+    let mut planned = match &pack {
+        Some(p) => crate::skies::plan(&state.skies, p)?,
+        None => vec![],
+    };
+    let mut used = vec![];
+    if apply_mods {
+        let (m, u) = state.mods.plan(install)?;
+        planned.extend(m);
+        used = u;
     }
+    let r = crate::overlay::sync(install, &planned, pack.as_ref().map(|p| (p.id.as_str(), p.name.as_str())), &used)?;
+    if !r.unchanged {
+        state.logger.info(
+            "mods",
+            format!(
+                "Applied sky '{}' and {} mod(s): {} file(s) replaced",
+                pack.as_ref().map(|p| p.name.as_str()).unwrap_or("Roblox default"),
+                used.len(),
+                r.written
+            ),
+        );
+        if !r.skipped.is_empty() {
+            state.logger.warn("mods", format!("Not in this Roblox version, skipped: {}", r.skipped.join(", ")));
+        }
+    }
+    Ok(r)
+}
+
+/// Re-apply content for the current launch installation using the active profile.
+pub fn reapply_content(state: &AppState) -> AppResult<Option<crate::overlay::SyncReport>> {
+    let Ok(target) = resolve_target(state) else { return Ok(None) };
+    let profile = state.profiles_snapshot().current().cloned();
+    let sky = profile.as_ref().and_then(|p| p.sky.clone());
+    let mods = profile.as_ref().map(|p| p.launch.apply_mods).unwrap_or(true);
+    apply_content(state, sky.as_deref(), mods, &target.dir).map(Some)
 }

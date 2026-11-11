@@ -19,8 +19,7 @@ use std::path::{Path, PathBuf};
 
 pub const FACES: [&str; 6] = ["bk", "dn", "ft", "lf", "rt", "up"];
 pub const PACK_FILE: &str = "aeolus-sky.json";
-pub const OVERLAY_FILE: &str = ".aeolus-overlay.json";
-pub const ORIGINALS_DIR: &str = ".aeolus-originals";
+pub use crate::overlay::{ORIGINALS_DIR, OVERLAY_FILE};
 /// Where current Roblox versions keep the skybox textures (sky512_*.tex).
 const SKY_DIR: &str = "PlatformContent/pc/textures/sky";
 const MAX_FILE: u64 = 32 * 1024 * 1024;
@@ -38,15 +37,6 @@ pub struct SkyPack {
     pub created_at: chrono::DateTime<chrono::Local>,
     #[serde(default)]
     pub preview: Option<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, Default, PartialEq)]
-#[serde(default, rename_all = "camelCase")]
-pub struct Overlay {
-    pub sky_pack_id: Option<String>,
-    pub sky_pack_name: Option<String>,
-    /// Paths (relative to the install) that currently hold Aeolus-provided files.
-    pub files: Vec<String>,
 }
 
 fn is_tex(name: &str) -> bool {
@@ -172,7 +162,7 @@ impl SkyLibrary {
         Ok(serde_json::from_slice(&b)?)
     }
 
-    fn pack_dir(&self, id: &str) -> AppResult<PathBuf> {
+    pub fn pack_dir(&self, id: &str) -> AppResult<PathBuf> {
         safe_join(&self.dir, id).ok_or_else(|| AppError::Validation("invalid sky id".into()))
     }
 
@@ -250,77 +240,37 @@ impl SkyLibrary {
     }
 }
 
-pub fn read_overlay(install: &Path) -> Overlay {
-    std::fs::read(install.join(OVERLAY_FILE))
-        .ok()
-        .and_then(|b| serde_json::from_slice(&b).ok())
-        .unwrap_or_default()
+pub use crate::overlay::{read_overlay, restore, Overlay};
+
+/// Files to place for a sky pack.
+pub fn plan(library: &SkyLibrary, pack: &SkyPack) -> AppResult<Vec<crate::overlay::Planned>> {
+    let src_dir = library.pack_dir(&pack.id)?;
+    Ok(pack
+        .files
+        .iter()
+        .map(|f| crate::overlay::Planned { rel: format!("{SKY_DIR}/{f}"), source: src_dir.join(f) })
+        .collect())
 }
 
-/// Put Roblox's original sky files back and forget the overlay.
-pub fn restore(install: &Path) -> AppResult<usize> {
-    let ov = read_overlay(install);
-    let mut n = 0;
-    for rel in &ov.files {
-        let (Some(target), Some(orig)) = (safe_join(install, rel), safe_join(&install.join(ORIGINALS_DIR), rel)) else { continue };
-        if orig.is_file() {
-            std::fs::copy(&orig, &target)?;
-            n += 1;
-        }
-    }
-    let _ = std::fs::remove_dir_all(install.join(ORIGINALS_DIR));
-    let _ = std::fs::remove_file(install.join(OVERLAY_FILE));
-    Ok(n)
-}
-
-/// Apply `pack` (or Roblox's default sky when `None`) to an installation.
-/// Returns the number of files written and any skipped file names.
+/// Apply `pack` (or Roblox's default sky when `None`) on its own. The app uses
+/// `services::apply_content`, which combines the sky with mods.
 pub fn apply(install: &Path, library: &SkyLibrary, pack: Option<&SkyPack>) -> AppResult<(usize, Vec<String>)> {
     if !install.join(crate::installation::manifest::PLAYER_EXE).exists() {
         return Err(AppError::NotFound(format!("{} is not a Roblox installation", install.display())));
     }
-    let current = read_overlay(install);
-    if pack.map(|p| p.id.as_str()) == current.sky_pack_id.as_deref() && current.files.iter().all(|f| install.join(f).exists()) {
-        return Ok((0, vec![])); // already applied
-    }
-    restore(install)?;
-    let Some(pack) = pack else { return Ok((0, vec![])) };
-
-    let sky_dir = install.join(SKY_DIR);
-    let src_dir = library.pack_dir(&pack.id)?;
-    let mut written = vec![];
-    let mut skipped = vec![];
-    for f in &pack.files {
-        let rel = format!("{SKY_DIR}/{f}");
-        let target = sky_dir.join(f);
-        // Only replace files Roblox actually has, so we never add unknown files.
-        if !target.is_file() {
-            skipped.push(f.clone());
-            continue;
-        }
-        let orig = install.join(ORIGINALS_DIR).join(&rel);
-        if let Some(parent) = orig.parent() {
-            std::fs::create_dir_all(parent)?;
-        }
-        if !orig.exists() {
-            std::fs::copy(&target, &orig)?;
-        }
-        std::fs::copy(src_dir.join(f), &target)?;
-        written.push(rel);
-    }
-    if written.is_empty() {
-        let _ = std::fs::remove_dir_all(install.join(ORIGINALS_DIR));
+    let planned = match pack {
+        Some(p) => plan(library, p)?,
+        None => vec![],
+    };
+    let r = crate::overlay::sync(install, &planned, pack.map(|p| (p.id.as_str(), p.name.as_str())), &[])?;
+    if pack.is_some() && !r.unchanged && r.written == 0 {
         return Err(AppError::Validation(format!(
             "This Roblox version has no sky files matching '{}'. The pack may be for a different Roblox version.",
-            pack.name
+            pack.map(|p| p.name.as_str()).unwrap_or_default()
         )));
     }
-    let n = written.len();
-    store::write_json(
-        &install.join(OVERLAY_FILE),
-        &Overlay { sky_pack_id: Some(pack.id.clone()), sky_pack_name: Some(pack.name.clone()), files: written },
-    )?;
-    Ok((n, skipped))
+    let skipped = r.skipped.iter().map(|s| s.rsplit('/').next().unwrap_or(s).to_string()).collect();
+    Ok((r.written, skipped))
 }
 
 /// Which sky a launch should use: a profile setting overrides the global one.

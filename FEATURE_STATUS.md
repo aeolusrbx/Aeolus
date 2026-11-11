@@ -109,6 +109,7 @@ _Last updated: 2026-11-11 (v0.1.0)_
 | Start minimized | Implemented | |
 | Native notifications with preferences | Implemented | |
 | Single instance (forwards links) | Implemented | |
+| Mods: sounds, cursors, fonts (files + presets, per-profile switch, restore originals) | Tested (R, V) | not yet tried in Roblox |
 | Custom skies (.tex packs, global + per-profile, restore originals) | Tested (R, V) | not yet tried with a real sky pack in Roblox |
 | Discord Rich Presence (toggle, profile name, play time) | Tested (R, W) | seen in Discord on 2026-11-11; another app's presence (e.g. Medal) can take priority |
 | roblox-player link handler with restore of previous handler | Implemented | |

@@ -7,6 +7,7 @@ export type PageId =
   | "installations"
   | "launch"
   | "fastflags"
+  | "mods"
   | "customization"
   | "plugins"
   | "diagnostics"
@@ -251,6 +252,7 @@ export interface LaunchPrefs {
   applyFastFlags: boolean;
   updateBeforeLaunch: boolean;
   verifyBeforeLaunch: boolean;
+  applyMods: boolean;
   afterLaunch: AfterLaunch;
 }
 
@@ -370,4 +372,24 @@ export interface SkiesOverview {
   globalPackId: string | null;
   appliedPackId: string | null;
   appliedPackName: string | null;
+}
+
+export type ModKind = "sound" | "cursor" | "font";
+export interface ModChoice {
+  enabled: boolean;
+  file: string | null;
+  originalName: string | null;
+  preset: string | null;
+  updatedAt: string;
+}
+export interface ModSlot {
+  id: string;
+  kind: ModKind;
+  label: string;
+  description: string;
+  targets: string[];
+  presets: { id: string; label: string }[];
+  choice: ModChoice | null;
+  previewUrl: string | null;
+  presetPreviews: [string, string | null][];
 }

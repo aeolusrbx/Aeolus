@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Blocks, Download, Flag, Home, Paintbrush, PanelLeftClose, PanelLeftOpen, Rocket, Settings as SettingsIcon, Stethoscope } from "lucide-react";
+import { Blocks, Download, Flag, Wand2, Home, Paintbrush, PanelLeftClose, PanelLeftOpen, Rocket, Settings as SettingsIcon, Stethoscope } from "lucide-react";
 import type { PageId } from "../types";
 import { useApp } from "../stores/app";
 import { Logo } from "./Logo";
@@ -10,6 +10,7 @@ export const NAV: { id: PageId; label: string; icon: typeof Home }[] = [
   { id: "installations", label: "Installations", icon: Download },
   { id: "launch", label: "Launch", icon: Rocket },
   { id: "fastflags", label: "Fast Flags", icon: Flag },
+  { id: "mods", label: "Mods", icon: Wand2 },
   { id: "customization", label: "Customization", icon: Paintbrush },
   { id: "plugins", label: "Plugins", icon: Blocks },
   { id: "diagnostics", label: "Diagnostics", icon: Stethoscope },

@@ -1,6 +1,6 @@
 [package]
 name = "aeolus"
-version = "0.1.4"
+version = "0.1.5"
 description = "Aeolus - Roblox bootstrapper and client manager"
 authors = ["Aeolus contributors"]
 edition = "2021"

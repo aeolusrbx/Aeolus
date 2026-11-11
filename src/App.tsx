@@ -13,6 +13,7 @@ const Installations = lazy(() => import("./pages/Installations"));
 const Launch = lazy(() => import("./pages/Launch"));
 const FastFlags = lazy(() => import("./pages/FastFlags"));
 const Customization = lazy(() => import("./pages/Customization"));
+const Mods = lazy(() => import("./pages/Mods"));
 const Plugins = lazy(() => import("./pages/Plugins"));
 const Diagnostics = lazy(() => import("./pages/Diagnostics"));
 const SettingsPage = lazy(() => import("./pages/Settings"));
@@ -22,6 +23,7 @@ const PAGES: Record<PageId, React.ComponentType> = {
   installations: Installations,
   launch: Launch,
   fastflags: FastFlags,
+  mods: Mods,
   customization: Customization,
   plugins: Plugins,
   diagnostics: Diagnostics,

@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { useApp } from "../stores/app";
 import { Card, Field, Input, PageHeader, SectionTitle, Tabs, Toggle, cx } from "../components/ui";
 import { Logo } from "../components/Logo";
-import { SkySection } from "../components/SkySection";
 import { isHexColor } from "../utils/format";
 import type { Settings } from "../types";
 
@@ -74,8 +73,6 @@ export default function Customization() {
           </div>
         </div>
       </Card>
-
-      <SkySection />
 
       <SectionTitle>Interface</SectionTitle>
       <Card className="mb-8 divide-y divide-line px-4">

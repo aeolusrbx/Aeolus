@@ -269,7 +269,7 @@ impl Settings {
         if !is_hex_color(&self.general.accent) {
             return Err(format!("Accent color '{}' must be a hex color like #FF861F", self.general.accent));
         }
-        const PAGES: [&str; 8] = ["home", "installations", "launch", "fastflags", "customization", "plugins", "diagnostics", "settings"];
+        const PAGES: [&str; 9] = ["home", "installations", "launch", "fastflags", "mods", "customization", "plugins", "diagnostics", "settings"];
         if !PAGES.contains(&self.general.default_page.as_str()) {
             return Err(format!("Unknown default page '{}'", self.general.default_page));
         }

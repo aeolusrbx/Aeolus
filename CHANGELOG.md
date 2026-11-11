@@ -2,6 +2,17 @@
 
 All notable changes to Aeolus are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/) and the project uses semantic versioning.
 
+## [0.1.5] — 2026-11-11
+
+### Added
+- **Mods page** (new in the sidebar): replace Roblox's built-in sounds (death, footsteps, jump, landing, falling, getting up, swimming, explosion, water splash), cursors (normal and far) and fonts (interface font, emoji font) with your own files.
+- Presets: **Classic oof** death sound (uses the copy Roblox still ships) and Dot / Crosshair / Ring cursors.
+- Each mod can be switched on and off or reset to Roblox's original; launch profiles have a "Use mods" switch.
+- Custom skies moved to the Mods page.
+
+### Changed
+- Sky and mods share one system that saves Roblox's originals and restores them exactly.
+
 ## [0.1.4] — 2026-11-11
 
 ### Fixed

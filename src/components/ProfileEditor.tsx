@@ -39,7 +39,7 @@ export function ProfileEditor({
   const [p, setP] = useState<ProfileInput>(
     initial
       ? { name: initial.name, description: initial.description, icon: initial.icon, accent: initial.accent, fastFlagProfileId: initial.fastFlagProfileId, sky: initial.sky ?? null, launch: { ...initial.launch } }
-      : { name: "", description: "", icon: "gamepad-2", accent: "#FF861F", fastFlagProfileId: null, sky: null, launch: { applyFastFlags: true, updateBeforeLaunch: true, verifyBeforeLaunch: false, afterLaunch: "nothing" } },
+      : { name: "", description: "", icon: "gamepad-2", accent: "#FF861F", fastFlagProfileId: null, sky: null, launch: { applyFastFlags: true, updateBeforeLaunch: true, verifyBeforeLaunch: false, applyMods: true, afterLaunch: "nothing" } },
   );
   const [saving, setSaving] = useState(false);
   const nameErr = !p.name.trim() ? "Name is required" : p.name.length > 60 ? "Too long" : null;
@@ -105,6 +105,9 @@ export function ProfileEditor({
       <div className="mt-5 divide-y divide-line rounded-xl border border-line px-4">
         <Field label="Apply Fast Flags on launch" description="Writes the selected Fast Flag profile to the installation before starting Roblox.">
           <Toggle checked={p.launch.applyFastFlags} onChange={(v) => setLaunch("applyFastFlags", v)} />
+        </Field>
+        <Field label="Use mods" description="Apply your sky, sounds, cursors and fonts from the Mods page. Turn off for plain Roblox.">
+          <Toggle checked={p.launch.applyMods ?? true} onChange={(v) => setLaunch("applyMods", v)} />
         </Field>
         <Field label="Update before launch" description="Installs a pending Roblox update first (Aeolus installation only).">
           <Toggle checked={p.launch.updateBeforeLaunch} onChange={(v) => setLaunch("updateBeforeLaunch", v)} />

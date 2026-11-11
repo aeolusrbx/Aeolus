@@ -33,6 +33,7 @@ describe("Aeolus UI", () => {
       ["Installations", "Aeolus installation"],
       ["Launch", "Launching with"],
       ["Fast Flags", "Profiles"],
+      ["Mods", "Sounds"],
       ["Customization", "Accent color"],
       ["Plugins", "Graphics Presets"],
       ["Diagnostics", "Export report"],
@@ -99,13 +100,23 @@ describe("Aeolus UI", () => {
   it("picks a custom sky and switches back to Roblox's", async () => {
     render(<App />);
     await screen.findByText("Welcome back");
-    go("Customization");
+    go("Mods");
     fireEvent.click(await screen.findByRole("button", { name: "Sky Sunset" }));
     await waitFor(() => expect(state.settings.mods.skyPackId).toBe("s1"));
     expect(await screen.findByText(/Sky set to Sunset/)).toBeInTheDocument();
     await waitFor(() => expect(screen.getByRole("button", { name: "Sky Sunset" })).toHaveAttribute("aria-pressed", "true"));
     fireEvent.click(screen.getByRole("button", { name: "Roblox default sky" }));
     await waitFor(() => expect(state.settings.mods.skyPackId).toBe(null));
+  });
+
+  it("sets the classic oof preset and resets it", async () => {
+    render(<App />);
+    await screen.findByText("Welcome back");
+    go("Mods");
+    fireEvent.click(await screen.findByRole("button", { name: "Classic oof" }));
+    await waitFor(() => expect(state.mods.find((m) => m.id === "death")!.choice?.preset).toBe("classic-oof"));
+    fireEvent.click(await screen.findByRole("button", { name: "Reset Death sound" }));
+    await waitFor(() => expect(state.mods.find((m) => m.id === "death")!.choice).toBe(null));
   });
 
   it("filters and searches Fast Flags and shows allowlist status", async () => {

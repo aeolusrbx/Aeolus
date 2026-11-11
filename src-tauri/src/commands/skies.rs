@@ -63,12 +63,6 @@ pub fn sky_rename(app: AppHandle, state: State<'_, AppState>, id: String, name: 
 #[tauri::command]
 pub fn sky_delete(app: AppHandle, state: State<'_, AppState>, id: String) -> AppResult<()> {
     let p = state.skies.get(&id)?;
-    // If it's currently applied, put Roblox's sky back first.
-    if let Ok(t) = resolve_target(&state) {
-        if skies::read_overlay(&t.dir).sky_pack_id.as_deref() == Some(id.as_str()) {
-            skies::restore(&t.dir)?;
-        }
-    }
     state.skies.delete(&id)?;
     let mut s = state.settings();
     if s.mods.sky_pack_id.as_deref() == Some(id.as_str()) {
@@ -79,6 +73,8 @@ pub fn sky_delete(app: AppHandle, state: State<'_, AppState>, id: String) -> App
     if detached > 0 {
         changed(&app, "profiles");
     }
+    // Put Roblox's sky back if this pack was applied (mods stay as they are).
+    crate::services::reapply_content(&state)?;
     state.logger.info("skies", format!("Deleted sky '{}'", p.name));
     state.activity.record(ActivityKind::Config, format!("Deleted sky '{}'", p.name), None);
     changed(&app, "skies");
@@ -97,19 +93,13 @@ pub fn sky_set_global(app: AppHandle, state: State<'_, AppState>, id: Option<Str
     state.save_settings(s)?;
     let name = pack.as_ref().map(|p| p.name.clone());
     // Apply right away when there's an installation; otherwise it applies on next launch.
-    let applied = match resolve_target(&state) {
-        Ok(t) => {
-            let active = state.profiles_snapshot().current().and_then(|p| p.sky.clone());
-            if active.is_some() {
-                None // the active profile has its own sky; leave the install alone
-            } else {
-                let (n, _) = skies::apply(&t.dir, &state.skies, pack.as_ref())?;
-                Some(n)
-            }
+    let applied = crate::services::reapply_content(&state)?;
+    if let (Some(p), Some(r)) = (&pack, &applied) {
+        if !r.unchanged && r.written == 0 {
+            return Err(AppError::Validation(format!("This Roblox version has no sky files matching '{}'.", p.name)));
         }
-        Err(_) => None,
-    };
-    state.logger.info("skies", format!("Global sky set to {} (applied: {})", name.as_deref().unwrap_or("Roblox default"), applied.map(|n| n.to_string()).unwrap_or_else(|| "on next launch".into())));
+    }
+    state.logger.info("skies", format!("Global sky set to {} ({})", name.as_deref().unwrap_or("Roblox default"), if applied.is_some() { "applied" } else { "applies on next launch" }));
     changed(&app, "skies");
     changed(&app, "settings");
     if pack.is_none() && id.is_some() {

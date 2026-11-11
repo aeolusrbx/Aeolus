@@ -145,7 +145,7 @@ export function SkySection() {
         <div className="mt-3 flex items-start gap-2 text-[11px] text-fg-3">
           <Info size={12} className="mt-0.5 shrink-0" />
           <span>
-            Custom skies only show in games that use Roblox's default sky; games with their own sky override it. Profiles can pick a different sky on the Launch page.
+            Profiles can pick a different sky on the Launch page.
             {data?.appliedPackName ? ` Currently applied: ${data.appliedPackName}.` : ""}
           </span>
         </div>
