@@ -2,6 +2,11 @@
 
 All notable changes to Aeolus are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/) and the project uses semantic versioning.
 
+## [0.1.4] — 2026-11-11
+
+### Fixed
+- Custom skies failed with "This Roblox version has no sky files matching…". Current Roblox keeps the skybox textures in `PlatformContent\pc\textures\sky`, not `content\sky`; Aeolus now writes them there.
+
 ## [0.1.3] — 2026-11-11
 
 ### Added

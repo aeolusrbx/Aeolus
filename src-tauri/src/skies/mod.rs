@@ -1,10 +1,10 @@
 //! Custom skies.
 //!
 //! A sky pack is the six Roblox sky textures (`sky512_bk/dn/ft/lf/rt/up.tex`),
-//! optionally with extra `.tex` files from Roblox's `content/sky` folder and a
-//! preview image. Packs are stored under the Aeolus config folder. Applying a
-//! pack copies its textures over `<install>/content/sky`, after saving the
-//! originals once; restoring puts the originals back. Only files that already
+//! optionally with extra `.tex` files from Roblox's sky folder (such as the
+//! `indoor512_*` textures) and a preview image. Packs are stored under the
+//! Aeolus config folder. Applying a pack copies its textures over
+//! `<install>/PlatformContent/pc/textures/sky`, after saving the originals once; restoring puts the originals back. Only files that already
 //! exist in Roblox's sky folder are ever replaced.
 //!
 //! Note: games that define their own Sky object override the default sky, so a
@@ -21,7 +21,8 @@ pub const FACES: [&str; 6] = ["bk", "dn", "ft", "lf", "rt", "up"];
 pub const PACK_FILE: &str = "aeolus-sky.json";
 pub const OVERLAY_FILE: &str = ".aeolus-overlay.json";
 pub const ORIGINALS_DIR: &str = ".aeolus-originals";
-const SKY_DIR: &str = "content/sky";
+/// Where current Roblox versions keep the skybox textures (sky512_*.tex).
+const SKY_DIR: &str = "PlatformContent/pc/textures/sky";
 const MAX_FILE: u64 = 32 * 1024 * 1024;
 const MAX_FILES: usize = 64;
 
