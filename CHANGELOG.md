@@ -2,6 +2,15 @@
 
 All notable changes to Aeolus are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/) and the project uses semantic versioning.
 
+## [0.1.1] — 2026-11-11
+
+### Added
+- Automatic release builds: publishing a GitHub Release builds the NSIS and MSI installers on Windows, runs all tests, and attaches the installers plus `aeolus-latest.json`.
+- Self-update works out of the box: the official feed (`github.com/aeolusrbx/Aeolus`) is the default, and Aeolus checks it on startup (can be turned off in Settings → Advanced).
+
+### Changed
+- Settings schema 2: existing installs that never set a release feed are migrated to the official one; a custom feed is kept.
+
 ## [0.1.0] — 2026-11-11
 
 ### Added

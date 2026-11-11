@@ -3,7 +3,10 @@
 
 use serde::{Deserialize, Serialize};
 
-pub const SETTINGS_SCHEMA_VERSION: u32 = 1;
+pub const SETTINGS_SCHEMA_VERSION: u32 = 2;
+
+/// Official Aeolus release feed (published by the GitHub release workflow).
+pub const DEFAULT_UPDATE_FEED: &str = "https://github.com/aeolusrbx/Aeolus/releases/latest/download/aeolus-latest.json";
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "lowercase")]
@@ -176,7 +179,7 @@ impl Default for Privacy {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(default, rename_all = "camelCase")]
 pub struct Advanced {
     pub developer_mode: bool,
@@ -185,6 +188,19 @@ pub struct Advanced {
     pub handle_roblox_links: bool,
     /// URL of an Aeolus release feed (JSON). Empty = self-update checks disabled.
     pub self_update_feed: String,
+    /// Check the release feed for a newer Aeolus when the app starts.
+    pub check_aeolus_updates_on_startup: bool,
+}
+impl Default for Advanced {
+    fn default() -> Self {
+        Self {
+            developer_mode: false,
+            debug_logging: false,
+            handle_roblox_links: false,
+            self_update_feed: DEFAULT_UPDATE_FEED.into(),
+            check_aeolus_updates_on_startup: true,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]

@@ -48,8 +48,23 @@ pub fn migrate(mut doc: Value, current: u32, migrations: &[Migration]) -> Result
     Ok((doc, MigrationOutcome::Migrated { from: found, to: current }))
 }
 
-/// Settings migrations. Schema 1 is the initial release, so this is empty.
-pub const SETTINGS_MIGRATIONS: &[Migration] = &[];
+/// Settings migrations: index 0 upgrades schema 1 -> 2.
+pub const SETTINGS_MIGRATIONS: &[Migration] = &[settings_v1_to_v2];
+
+/// v2 (Aeolus 0.1.1): the official release feed became the default. Installs that
+/// never set a feed get it; a feed the user typed in is kept.
+fn settings_v1_to_v2(mut doc: Value) -> Value {
+    if let Some(obj) = doc.as_object_mut() {
+        let adv = obj.entry("advanced").or_insert_with(|| Value::Object(Default::default()));
+        if let Some(a) = adv.as_object_mut() {
+            let empty = a.get("selfUpdateFeed").and_then(|v| v.as_str()).map(|s| s.trim().is_empty()).unwrap_or(true);
+            if empty {
+                a.insert("selfUpdateFeed".into(), Value::from(super::settings::DEFAULT_UPDATE_FEED));
+            }
+        }
+    }
+    doc
+}
 
 #[cfg(test)]
 mod tests {
@@ -89,6 +104,18 @@ mod tests {
     fn missing_version_is_treated_as_v1() {
         let (_, o) = migrate(json!({}), 1, SETTINGS_MIGRATIONS).unwrap();
         assert_eq!(o, MigrationOutcome::UpToDate);
+    }
+
+    #[test]
+    fn settings_v2_sets_default_feed_but_keeps_custom() {
+        use crate::configuration::settings::DEFAULT_UPDATE_FEED;
+        let (d, o) = migrate(json!({"schemaVersion": 1, "advanced": {"selfUpdateFeed": ""}}), 2, SETTINGS_MIGRATIONS).unwrap();
+        assert_eq!(o, MigrationOutcome::Migrated { from: 1, to: 2 });
+        assert_eq!(d["advanced"]["selfUpdateFeed"], DEFAULT_UPDATE_FEED);
+        let (d, _) = migrate(json!({"schemaVersion": 1, "advanced": {"selfUpdateFeed": "https://example.com/f.json"}}), 2, SETTINGS_MIGRATIONS).unwrap();
+        assert_eq!(d["advanced"]["selfUpdateFeed"], "https://example.com/f.json");
+        let (d, _) = migrate(json!({"schemaVersion": 1}), 2, SETTINGS_MIGRATIONS).unwrap();
+        assert_eq!(d["advanced"]["selfUpdateFeed"], DEFAULT_UPDATE_FEED);
     }
 
     #[test]

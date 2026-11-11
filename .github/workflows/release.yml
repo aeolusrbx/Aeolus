@@ -1,0 +1,76 @@
+# Builds Aeolus on Windows whenever a GitHub Release is published, runs the tests,
+# and attaches the installers plus `aeolus-latest.json` (the self-update feed) to
+# that release.
+#
+# To release: bump the version in package.json, src-tauri/Cargo.toml and
+# src-tauri/tauri.conf.json, push, then publish a release whose tag is
+# v<version> (for example v0.1.1). This workflow fills in the files.
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Check that the tag matches the app version
+        shell: pwsh
+        run: |
+          $v = (Get-Content src-tauri/tauri.conf.json -Raw | ConvertFrom-Json).version
+          if ("v$v" -ne "${{ github.event.release.tag_name }}") {
+            throw "Release tag ${{ github.event.release.tag_name }} does not match app version v$v. Bump the version or fix the tag."
+          }
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Frontend tests
+        run: npm test
+
+      - name: Backend tests
+        run: cargo test --manifest-path src-tauri/Cargo.toml
+
+      - name: Build installers (NSIS + MSI)
+        run: npm run tauri build
+
+      - name: Create self-update feed
+        shell: pwsh
+        run: |
+          $v = (Get-Content src-tauri/tauri.conf.json -Raw | ConvertFrom-Json).version
+          $exe = Get-ChildItem src-tauri/target/release/bundle/nsis/*-setup.exe | Select-Object -First 1
+          $hash = (Get-FileHash $exe.FullName -Algorithm SHA256).Hash.ToLower()
+          $feed = [ordered]@{
+            version = $v
+            url     = "https://github.com/${{ github.repository }}/releases/download/${{ github.event.release.tag_name }}/$($exe.Name)"
+            sha256  = $hash
+            notes   = "See https://github.com/${{ github.repository }}/releases/tag/${{ github.event.release.tag_name }}"
+          }
+          $feed | ConvertTo-Json | Set-Content -Path aeolus-latest.json -Encoding utf8NoBOM
+          Get-Content aeolus-latest.json
+
+      - name: Attach files to the release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.release.tag_name }}
+          files: |
+            src-tauri/target/release/bundle/nsis/*-setup.exe
+            src-tauri/target/release/bundle/msi/*.msi
+            aeolus-latest.json

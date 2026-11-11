@@ -82,11 +82,29 @@ pub fn run() {
 
             if let Some(link) = link {
                 handle_link(&handle, link, true);
-            } else if settings.installation.check_updates_on_startup {
-                let h = handle.clone();
-                tauri::async_runtime::spawn(async move {
-                    let _ = services::check_updates(&h, true).await;
-                });
+            } else {
+                if settings.installation.check_updates_on_startup {
+                    let h = handle.clone();
+                    tauri::async_runtime::spawn(async move {
+                        let _ = services::check_updates(&h, true).await;
+                    });
+                }
+                if settings.advanced.check_aeolus_updates_on_startup && !settings.advanced.self_update_feed.trim().is_empty() {
+                    let h = handle.clone();
+                    let feed = settings.advanced.self_update_feed.clone();
+                    tauri::async_runtime::spawn(async move {
+                        let st = h.state::<state::AppState>();
+                        match system::selfupdate::check(&st.http, &feed, env!("CARGO_PKG_VERSION")).await {
+                            Ok(c) if c.update_available => {
+                                let v = c.latest.map(|l| l.version).unwrap_or_default();
+                                st.logger.info("self-update", format!("Aeolus {v} is available"));
+                                services::notify(&h, "info", "Aeolus update available", &format!("Version {v} is ready. Install it from Settings → Advanced."), true);
+                            }
+                            Ok(_) => st.logger.debug("self-update", "Aeolus is up to date"),
+                            Err(e) => st.logger.warn("self-update", format!("Aeolus update check failed: {e}")),
+                        }
+                    });
+                }
             }
 
             // Fallback: if the UI never reports ready (e.g. a frontend error), still show the window.

@@ -69,13 +69,13 @@ mod tests {
         assert!(p.exists());
 
         // partial file: missing sections are filled with defaults
-        std::fs::write(&p, br##"{"schemaVersion":1,"general":{"accent":"#00AAFF"}}"##).unwrap();
+        std::fs::write(&p, br##"{"schemaVersion":2,"general":{"accent":"#00AAFF"}}"##).unwrap();
         let (s, _) = load_settings(&p, &b).unwrap();
         assert_eq!(s.general.accent, "#00AAFF");
         assert_eq!(s.general.default_page, "home");
 
         // invalid value -> defaults, backup made
-        std::fs::write(&p, br#"{"schemaVersion":1,"general":{"accent":"orange"}}"#).unwrap();
+        std::fs::write(&p, br#"{"schemaVersion":2,"general":{"accent":"orange"}}"#).unwrap();
         let (s, notes) = load_settings(&p, &b).unwrap();
         assert_eq!(s.general.accent, "#FF861F");
         assert_eq!(notes.len(), 1);

@@ -27,7 +27,7 @@ export function createState() {
     plugins: { requireReapprovalOnChange: true, notifyOnErrors: true },
     notifications: { native: true, updateAvailable: true, updateCompleted: true, updateFailed: true, versionChanged: true, launchFailed: true, pluginEvents: false },
     privacy: { logRetentionDays: 14, includeLogsInReports: true },
-    advanced: { developerMode: false, debugLogging: false, handleRobloxLinks: false, selfUpdateFeed: "" },
+    advanced: { developerMode: false, debugLogging: false, handleRobloxLinks: false, selfUpdateFeed: "", checkAeolusUpdatesOnStartup: true },
   };
   const flags: Any[] = [
     { id: "f1", name: "Default", description: "No overrides", flags: {}, modifiedAt: ago(500) },

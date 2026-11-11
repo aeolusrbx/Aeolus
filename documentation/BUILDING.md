@@ -17,6 +17,13 @@ npm run tauri build      # release: src-tauri\target\release\bundle\{nsis,msi}\
 
 `tauri.conf.json` builds both an **NSIS** setup (`*-setup.exe`) and an **MSI**. Building the MSI needs WiX, which the Tauri CLI downloads automatically on Windows.
 
+## Publishing a release
+
+1. Bump the version in `package.json`, `src-tauri/Cargo.toml` and `src-tauri/tauri.conf.json` (e.g. `0.1.2`) and push.
+2. On GitHub: **Releases → Draft a new release**, tag `v0.1.2` (must match the version), add notes, **Publish release**.
+3. `.github/workflows/release.yml` builds on Windows, runs the tests, and attaches `Aeolus_<version>_x64-setup.exe`, the `.msi`, and `aeolus-latest.json` to the release. Watch it under the **Actions** tab (about 10–15 minutes).
+4. Installed copies of Aeolus see the update through `https://github.com/aeolusrbx/Aeolus/releases/latest/download/aeolus-latest.json`.
+
 ## Cross-compiling from Linux
 
 The 0.1.0 release was produced this way. Install `mingw-w64` and `nsis`, then:

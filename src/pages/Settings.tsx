@@ -237,8 +237,11 @@ export default function Settings() {
               {pathRow("Backups", info?.backupsDir)}
             </Group>
             <Group title="Aeolus updates">
-              <Field label="Release feed URL" description="HTTPS URL of an Aeolus release feed. Leave empty to disable self-update checks.">
+              <Field label="Release feed URL" description="Where Aeolus looks for new versions. Defaults to the official GitHub releases. Leave empty to disable.">
                 <Input className="w-72" placeholder="https://…/aeolus-latest.json" value={feed} onChange={(e) => setFeed(e.target.value)} onBlur={() => feed !== s.advanced.selfUpdateFeed && set("advanced", { selfUpdateFeed: feed.trim() })} />
+              </Field>
+              <Field label="Check for Aeolus updates on startup" description="Shows a notification when a newer Aeolus is published.">
+                <Toggle checked={s.advanced.checkAeolusUpdatesOnStartup} onChange={(v) => set("advanced", { checkAeolusUpdatesOnStartup: v })} />
               </Field>
               <Field label="Check for Aeolus updates">
                 <Button size="sm" icon={<RefreshCw size={12} />} loading={checkingSelf} onClick={async () => {

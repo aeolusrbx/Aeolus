@@ -65,6 +65,7 @@ export interface Settings {
     debugLogging: boolean;
     handleRobloxLinks: boolean;
     selfUpdateFeed: string;
+    checkAeolusUpdatesOnStartup: boolean;
   };
 }
 
