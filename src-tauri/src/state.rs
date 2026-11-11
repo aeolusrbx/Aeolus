@@ -30,6 +30,7 @@ pub struct AppState {
     pub started_minimized: AtomicBool,
     pub startup_notes: Mutex<Vec<String>>,
     pub presence: crate::system::discord::Presence,
+    pub skies: crate::skies::SkyLibrary,
     /// The Roblox session started by Aeolus that is currently running, if any.
     pub session: Mutex<Option<RobloxSession>>,
 }
@@ -104,6 +105,7 @@ impl AppState {
             started_minimized: AtomicBool::new(false),
             startup_notes: Mutex::new(notes),
             presence: crate::system::discord::Presence::start(logger.clone()),
+            skies: crate::skies::SkyLibrary::new(paths.skies()),
             session: Mutex::new(None),
             logger,
             paths,

@@ -18,6 +18,7 @@ export default function Launch() {
   const flags = useResource(api.ffProfiles, ["fastflags"]);
   const history = useResource(api.launchHistory, ["launch"]);
   const ov = useResource(api.installOverview, ["install"]);
+  const skies = useResource(api.skiesOverview, ["skies"]);
   const actions = useRobloxActions();
   const dialogs = useDialogs();
   const toast = useToast();
@@ -33,6 +34,7 @@ export default function Launch() {
       <ProfileEditor
         initial={p}
         flagProfiles={flags.data ?? []}
+        skies={skies.data?.packs ?? []}
         onClose={() => close(null)}
         onSave={async (input: ProfileInput) => {
           try {
@@ -131,6 +133,7 @@ export default function Launch() {
                   {p.description && <div className="truncate text-xs text-fg-2">{p.description}</div>}
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     <Badge>{flagName(p.fastFlagProfileId)}</Badge>
+                    {p.sky && <Badge>{p.sky === "default" ? "Roblox sky" : `Sky: ${skies.data?.packs.find((s) => s.id === p.sky)?.name ?? "missing"}`}</Badge>}
                     {p.launch.updateBeforeLaunch && <Badge>Auto-update</Badge>}
                     {p.launch.verifyBeforeLaunch && <Badge>Verify</Badge>}
                     {p.launch.afterLaunch !== "nothing" && <Badge>{p.launch.afterLaunch === "close" ? "Close after launch" : "Minimize after launch"}</Badge>}

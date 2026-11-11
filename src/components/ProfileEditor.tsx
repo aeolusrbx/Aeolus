@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Flame, Gamepad2, Monitor, Rocket, Shield, Sparkles, Star, User, Wind, Zap, type LucideIcon } from "lucide-react";
 import { Modal } from "../stores/dialogs";
-import type { FlagProfileSummary, Profile, ProfileInput } from "../types";
+import type { FlagProfileSummary, Profile, ProfileInput, SkyPack } from "../types";
 import { Button, Input, Select, Toggle, Field, cx } from "./ui";
 import { isHexColor } from "../utils/format";
 
@@ -26,18 +26,20 @@ export function ProfileIcon({ name, size = 16, className }: { name: string; size
 export function ProfileEditor({
   initial,
   flagProfiles,
+  skies = [],
   onSave,
   onClose,
 }: {
   initial?: Profile;
   flagProfiles: FlagProfileSummary[];
+  skies?: SkyPack[];
   onSave: (p: ProfileInput) => Promise<boolean>;
   onClose: () => void;
 }) {
   const [p, setP] = useState<ProfileInput>(
     initial
-      ? { name: initial.name, description: initial.description, icon: initial.icon, accent: initial.accent, fastFlagProfileId: initial.fastFlagProfileId, launch: { ...initial.launch } }
-      : { name: "", description: "", icon: "gamepad-2", accent: "#FF861F", fastFlagProfileId: null, launch: { applyFastFlags: true, updateBeforeLaunch: true, verifyBeforeLaunch: false, afterLaunch: "nothing" } },
+      ? { name: initial.name, description: initial.description, icon: initial.icon, accent: initial.accent, fastFlagProfileId: initial.fastFlagProfileId, sky: initial.sky ?? null, launch: { ...initial.launch } }
+      : { name: "", description: "", icon: "gamepad-2", accent: "#FF861F", fastFlagProfileId: null, sky: null, launch: { applyFastFlags: true, updateBeforeLaunch: true, verifyBeforeLaunch: false, afterLaunch: "nothing" } },
   );
   const [saving, setSaving] = useState(false);
   const nameErr = !p.name.trim() ? "Name is required" : p.name.length > 60 ? "Too long" : null;
@@ -61,7 +63,17 @@ export function ProfileEditor({
             ))}
           </Select>
         </div>
-        <div className="col-span-2">
+        <div>
+          <label className="mb-1.5 block text-xs font-medium text-fg-2">Sky</label>
+          <Select value={p.sky ?? ""} onChange={(e) => setP({ ...p, sky: e.target.value || null })} aria-label="Sky">
+            <option value="">Use the sky from Customization</option>
+            <option value="default">Roblox default sky</option>
+            {skies.map((s) => (
+              <option key={s.id} value={s.id}>{s.name}</option>
+            ))}
+          </Select>
+        </div>
+        <div>
           <label className="mb-1.5 block text-xs font-medium text-fg-2">Description</label>
           <Input value={p.description} maxLength={300} onChange={(e) => setP({ ...p, description: e.target.value })} placeholder="Optional" />
         </div>

@@ -167,6 +167,13 @@ impl Default for Notifications {
     }
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
+#[serde(default, rename_all = "camelCase")]
+pub struct Mods {
+    /// Sky pack applied to every launch unless a profile chooses otherwise. None = Roblox's sky.
+    pub sky_pack_id: Option<String>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(default, rename_all = "camelCase")]
 pub struct Discord {
@@ -229,6 +236,7 @@ pub struct Settings {
     pub plugins: PluginSettings,
     pub notifications: Notifications,
     pub discord: Discord,
+    pub mods: Mods,
     pub privacy: Privacy,
     pub advanced: Advanced,
 }
@@ -244,6 +252,7 @@ impl Default for Settings {
             plugins: PluginSettings::default(),
             notifications: Notifications::default(),
             discord: Discord::default(),
+            mods: Mods::default(),
             privacy: Privacy::default(),
             advanced: Advanced::default(),
         }

@@ -96,6 +96,18 @@ describe("Aeolus UI", () => {
     expect(state.settings.general.accent).toBe("#3E8EF7");
   });
 
+  it("picks a custom sky and switches back to Roblox's", async () => {
+    render(<App />);
+    await screen.findByText("Welcome back");
+    go("Customization");
+    fireEvent.click(await screen.findByRole("button", { name: "Sky Sunset" }));
+    await waitFor(() => expect(state.settings.mods.skyPackId).toBe("s1"));
+    expect(await screen.findByText(/Sky set to Sunset/)).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole("button", { name: "Sky Sunset" })).toHaveAttribute("aria-pressed", "true"));
+    fireEvent.click(screen.getByRole("button", { name: "Roblox default sky" }));
+    await waitFor(() => expect(state.settings.mods.skyPackId).toBe(null));
+  });
+
   it("filters and searches Fast Flags and shows allowlist status", async () => {
     render(<App />);
     await screen.findByText("Welcome back");

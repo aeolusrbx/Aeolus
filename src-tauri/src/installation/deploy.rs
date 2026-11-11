@@ -349,6 +349,8 @@ pub struct VerifyReport {
     pub missing: Vec<String>,
     pub modified: Vec<String>,
     pub index_missing: bool,
+    /// Files intentionally replaced by Aeolus (e.g. a custom sky); not counted as damage.
+    pub overlaid: usize,
 }
 impl VerifyReport {
     pub fn ok(&self) -> bool {
@@ -369,11 +371,17 @@ pub fn verify(dir: &Path, full: bool, cancel: &CancelToken, progress: &dyn Fn(us
             return Ok(r);
         }
     };
+    let overlay = crate::skies::read_overlay(dir).files;
     let n = idx.files.len();
     for (i, f) in idx.files.iter().enumerate() {
         cancel.check()?;
         if i % 50 == 0 {
             progress(i, n);
+        }
+        if overlay.iter().any(|o| o == &f.path) {
+            r.overlaid += 1;
+            r.checked += 1;
+            continue;
         }
         let Some(p) = safe_join(dir, &f.path) else {
             r.modified.push(f.path.clone());

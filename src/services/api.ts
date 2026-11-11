@@ -92,6 +92,13 @@ export const api = {
   profileExportFile: (id: string, path: string) => call<void>("profile_export_file", { id, path }),
   profileImportFile: (path: string) => call<T.Profile>("profile_import_file", { path }),
 
+  // skies
+  skiesOverview: () => call<T.SkiesOverview>("skies_overview"),
+  skyImport: (path: string, name: string | null) => call<T.SkyPack>("sky_import", { path, name }),
+  skyRename: (id: string, name: string) => call<void>("sky_rename", { id, name }),
+  skyDelete: (id: string) => call<void>("sky_delete", { id }),
+  skySetGlobal: (id: string | null) => call<string | null>("sky_set_global", { id }),
+
   // backups
   backupsOverview: () => call<T.BackupEntry[]>("backups_overview"),
   restoreBackup: (category: string, id: string) => call<void>("restore_backup", { category, id }),

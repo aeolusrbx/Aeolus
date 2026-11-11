@@ -147,7 +147,7 @@ export default function Installations() {
             </div>
             {lastVerify && (
               <div className="mt-3 text-xs text-fg-3">
-                Last verification: {lastVerify.checked.toLocaleString()} files checked, {lastVerify.missing.length} missing, {lastVerify.modified.length} damaged.
+                Last verification: {lastVerify.checked.toLocaleString()} files checked, {lastVerify.missing.length} missing, {lastVerify.modified.length} damaged{lastVerify.overlaid ? `, ${lastVerify.overlaid} replaced by your custom sky` : ""}.
               </div>
             )}
             {progress && (

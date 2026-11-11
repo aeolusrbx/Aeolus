@@ -2,6 +2,13 @@
 
 All notable changes to Aeolus are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/) and the project uses semantic versioning.
 
+## [0.1.3] — 2026-11-11
+
+### Added
+- Custom skies: add sky packs (a folder or .zip with Roblox's six `sky512_*.tex` textures, plus an optional preview image) in Customization → Sky, and pick one for all launches. Launch profiles can choose their own sky or force Roblox's default.
+- Aeolus saves Roblox's original sky files before replacing them and restores them when you switch back, delete the pack, or pick "Roblox default". Only files Roblox already has are replaced.
+- Verify ignores files replaced by a custom sky, so it doesn't report them as damaged.
+
 ## [0.1.2] — 2026-11-11
 
 ### Added

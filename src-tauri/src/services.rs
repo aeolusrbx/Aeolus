@@ -283,6 +283,7 @@ pub async fn launch(app: &AppHandle, link: Option<String>, profile_id: Option<St
             let n = crate::fastflags::apply_to_install(&target.dir, &flags, &state.backups)?;
             state.logger.info("launch", format!("Applied {n} Fast Flags from {}", flag_profile.as_ref().map(|f| f.name.as_str()).unwrap_or("no profile")));
         }
+        apply_sky_for(&state, profile.as_ref().and_then(|p| p.sky.as_deref()), &target.dir);
         run_hooks(app, "beforeLaunch", None);
         let (pid, child) = launcher::spawn_and_watch(&launcher::player_exe(&target.dir), &args, std::time::Duration::from_secs(6)).await?;
         Ok((pid, child, target))
@@ -401,4 +402,29 @@ pub fn refresh_presence(app: &AppHandle) {
         _ => None,
     };
     state.presence.set(info);
+}
+
+/// Apply the sky chosen by the profile (or the global sky) to an installation.
+/// Sky problems are logged but never stop Roblox from launching.
+pub fn apply_sky_for(state: &AppState, profile_sky: Option<&str>, install: &std::path::Path) {
+    let global = state.settings().mods.sky_pack_id;
+    let wanted = crate::skies::resolve(profile_sky, global.as_deref());
+    let pack = match wanted.as_deref().map(|id| state.skies.get(id)) {
+        Some(Ok(p)) => Some(p),
+        Some(Err(_)) => {
+            state.logger.warn("skies", "The selected sky pack no longer exists; using Roblox's sky");
+            None
+        }
+        None => None,
+    };
+    match crate::skies::apply(install, &state.skies, pack.as_ref()) {
+        Ok((0, _)) => {}
+        Ok((n, skipped)) => {
+            state.logger.info("skies", format!("Applied sky '{}' ({n} files)", pack.as_ref().map(|p| p.name.as_str()).unwrap_or("Roblox default")));
+            if !skipped.is_empty() {
+                state.logger.warn("skies", format!("Skipped files Roblox doesn't use: {}", skipped.join(", ")));
+            }
+        }
+        Err(e) => state.logger.warn("skies", format!("Could not apply the sky: {e}")),
+    }
 }

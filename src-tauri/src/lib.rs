@@ -11,6 +11,7 @@ pub mod paths;
 pub mod plugins;
 pub mod profiles;
 pub mod services;
+pub mod skies;
 pub mod state;
 pub mod system;
 pub mod tray;
@@ -194,6 +195,11 @@ pub fn run() {
             commands::extras::plugin_set_config,
             commands::extras::plugin_install,
             commands::extras::plugin_uninstall,
+            commands::skies::skies_overview,
+            commands::skies::sky_import,
+            commands::skies::sky_rename,
+            commands::skies::sky_delete,
+            commands::skies::sky_set_global,
         ])
         .build(tauri::generate_context!())
         .expect("error while building Aeolus")

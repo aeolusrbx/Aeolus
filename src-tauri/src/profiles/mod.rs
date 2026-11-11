@@ -46,6 +46,9 @@ pub struct Profile {
     pub accent: String,
     #[serde(default)]
     pub fast_flag_profile_id: Option<String>,
+    /// Sky for this profile: None = use the global sky, "default" = Roblox's sky, else a pack id.
+    #[serde(default)]
+    pub sky: Option<String>,
     #[serde(default)]
     pub launch: LaunchPrefs,
     pub created_at: chrono::DateTime<chrono::Local>,
@@ -77,6 +80,7 @@ impl Default for ProfileStore {
             icon: default_icon(),
             accent: default_accent(),
             fast_flag_profile_id: None,
+            sky: None,
             launch: LaunchPrefs::default(),
             created_at: chrono::Local::now(),
             last_used_at: None,
@@ -97,6 +101,8 @@ pub struct ProfileInput {
     pub accent: String,
     #[serde(default)]
     pub fast_flag_profile_id: Option<String>,
+    #[serde(default)]
+    pub sky: Option<String>,
     #[serde(default)]
     pub launch: LaunchPrefs,
 }
@@ -145,6 +151,7 @@ impl ProfileStore {
             icon: input.icon,
             accent: input.accent,
             fast_flag_profile_id: input.fast_flag_profile_id,
+            sky: input.sky,
             launch: input.launch,
             created_at: chrono::Local::now(),
             last_used_at: None,
@@ -161,6 +168,7 @@ impl ProfileStore {
         p.icon = input.icon;
         p.accent = input.accent;
         p.fast_flag_profile_id = input.fast_flag_profile_id;
+        p.sky = input.sky;
         p.launch = input.launch;
         Ok(p.clone())
     }
@@ -181,6 +189,7 @@ impl ProfileStore {
             icon: src.icon,
             accent: src.accent,
             fast_flag_profile_id: src.fast_flag_profile_id,
+            sky: src.sky,
             launch: src.launch,
         })
     }
@@ -231,6 +240,18 @@ impl ProfileStore {
         n
     }
 
+    /// Clear references to a deleted sky pack.
+    pub fn detach_sky(&mut self, sky_id: &str) -> usize {
+        let mut n = 0;
+        for p in &mut self.profiles {
+            if p.sky.as_deref() == Some(sky_id) {
+                p.sky = None;
+                n += 1;
+            }
+        }
+        n
+    }
+
     pub fn export(&self, id: &str) -> AppResult<String> {
         let p = self.get(id)?;
         Ok(serde_json::to_string_pretty(&serde_json::json!({
@@ -268,7 +289,7 @@ impl ProfileStore {
         if self.profiles.iter().any(|p| p.name.eq_ignore_ascii_case(&name)) {
             name = format!("{name} (imported)");
         }
-        self.create(ProfileInput { name, description: e.description, icon: e.icon, accent: e.accent, fast_flag_profile_id: None, launch: e.launch })
+        self.create(ProfileInput { name, description: e.description, icon: e.icon, accent: e.accent, fast_flag_profile_id: None, sky: None, launch: e.launch })
     }
 }
 
@@ -277,7 +298,7 @@ mod tests {
     use super::*;
 
     fn input(name: &str) -> ProfileInput {
-        ProfileInput { name: name.into(), description: String::new(), icon: "zap".into(), accent: "#123456".into(), fast_flag_profile_id: Some("ff1".into()), launch: LaunchPrefs::default() }
+        ProfileInput { name: name.into(), description: String::new(), icon: "zap".into(), accent: "#123456".into(), fast_flag_profile_id: Some("ff1".into()), sky: None, launch: LaunchPrefs::default() }
     }
 
     #[test]

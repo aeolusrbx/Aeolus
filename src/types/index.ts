@@ -60,6 +60,7 @@ export interface Settings {
     pluginEvents: boolean;
   };
   discord: { richPresence: boolean; showProfile: boolean };
+  mods: { skyPackId: string | null };
   privacy: { logRetentionDays: number; includeLogsInReports: boolean };
   advanced: {
     developerMode: boolean;
@@ -167,6 +168,7 @@ export interface VerifyReport {
   missing: string[];
   modified: string[];
   indexMissing: boolean;
+  overlaid: number;
 }
 
 export interface UpdateRecord {
@@ -259,6 +261,8 @@ export interface Profile {
   icon: string;
   accent: string;
   fastFlagProfileId: string | null;
+  /** null = global sky, "default" = Roblox's sky, else a sky pack id */
+  sky: string | null;
   launch: LaunchPrefs;
   createdAt: string;
   lastUsedAt: string | null;
@@ -350,4 +354,20 @@ export interface SelfUpdateCheck {
   latest: { version: string; url: string; sha256: string; notes: string } | null;
   updateAvailable: boolean;
   configured: boolean;
+}
+
+export interface SkyPack {
+  id: string;
+  name: string;
+  files: string[];
+  createdAt: string;
+  preview: string | null;
+  previewUrl: string | null;
+}
+
+export interface SkiesOverview {
+  packs: SkyPack[];
+  globalPackId: string | null;
+  appliedPackId: string | null;
+  appliedPackName: string | null;
 }

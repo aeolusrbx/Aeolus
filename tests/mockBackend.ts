@@ -27,6 +27,7 @@ export function createState() {
     plugins: { requireReapprovalOnChange: true, notifyOnErrors: true },
     notifications: { native: true, updateAvailable: true, updateCompleted: true, updateFailed: true, versionChanged: true, launchFailed: true, pluginEvents: false },
     discord: { richPresence: true, showProfile: true },
+    mods: { skyPackId: null },
     privacy: { logRetentionDays: 14, includeLogsInReports: true },
     advanced: { developerMode: false, debugLogging: false, handleRobloxLinks: false, selfUpdateFeed: "", checkAeolusUpdatesOnStartup: true },
   };
@@ -41,8 +42,8 @@ export function createState() {
     defaultId: "p1",
     activeId: "p1",
     profiles: [
-      { id: "p1", name: "Default", description: "Standard launch", icon: "wind", accent: "#FF861F", fastFlagProfileId: null, launch: { applyFastFlags: true, updateBeforeLaunch: true, verifyBeforeLaunch: false, afterLaunch: "nothing" }, createdAt: ago(5000), lastUsedAt: ago(42) },
-      { id: "p2", name: "Competitive", description: "Low latency, low detail", icon: "zap", accent: "#3E8EF7", fastFlagProfileId: "f3", launch: { applyFastFlags: true, updateBeforeLaunch: true, verifyBeforeLaunch: true, afterLaunch: "minimize" }, createdAt: ago(3000), lastUsedAt: null },
+      { id: "p1", name: "Default", description: "Standard launch", icon: "wind", accent: "#FF861F", fastFlagProfileId: null, sky: null, launch: { applyFastFlags: true, updateBeforeLaunch: true, verifyBeforeLaunch: false, afterLaunch: "nothing" }, createdAt: ago(5000), lastUsedAt: ago(42) },
+      { id: "p2", name: "Competitive", description: "Low latency, low detail", icon: "zap", accent: "#3E8EF7", fastFlagProfileId: "f3", sky: null, launch: { applyFastFlags: true, updateBeforeLaunch: true, verifyBeforeLaunch: true, afterLaunch: "minimize" }, createdAt: ago(3000), lastUsedAt: null },
     ],
   };
   const install: Any = {
@@ -84,7 +85,8 @@ export function createState() {
       },
     },
   ];
-  return { settings, flags, profiles, install, activity, logs, plugins, launches: [] as Any[], calls: [] as { cmd: string; args: Any }[] };
+  const skies: Any[] = [{ id: "s1", name: "Sunset", files: ["sky512_bk.tex", "sky512_dn.tex", "sky512_ft.tex", "sky512_lf.tex", "sky512_rt.tex", "sky512_up.tex"], createdAt: ago(100), preview: null, previewUrl: null }];
+  return { settings, flags, profiles, install, activity, logs, plugins, skies, launches: [] as Any[], calls: [] as { cmd: string; args: Any }[] };
 }
 
 export type MockState = ReturnType<typeof createState>;
@@ -205,6 +207,15 @@ export function handler(s: MockState) {
         s.profiles.profiles.push(p);
         return p;
       }
+      case "skies_overview":
+        return { packs: s.skies, globalPackId: s.settings.mods.skyPackId, appliedPackId: s.settings.mods.skyPackId, appliedPackName: s.skies.find((k) => k.id === s.settings.mods.skyPackId)?.name ?? null };
+      case "sky_set_global":
+        s.settings.mods.skyPackId = args.id;
+        return s.skies.find((k) => k.id === args.id)?.name ?? null;
+      case "sky_delete":
+        s.skies = s.skies.filter((k) => k.id !== args.id);
+        if (s.settings.mods.skyPackId === args.id) s.settings.mods.skyPackId = null;
+        return null;
       case "diagnostics_system":
         return { osName: "Windows 11 Home 24H2", osVersion: "11 (26100)", osBuild: "26100", architecture: "x86_64", cpu: "AMD Ryzen 7 7800X3D 8-Core Processor", cpuCores: 16, gpus: ["NVIDIA GeForce RTX 4070"], totalMemory: 34_359_738_368, availableMemory: 19_100_000_000 };
       case "logs_query":

@@ -25,6 +25,7 @@ impl Paths {
             self.downloads(),
             self.default_versions_root(),
             self.plugins(),
+            self.skies(),
             self.updates_cache(),
         ] {
             std::fs::create_dir_all(d)?;
@@ -37,6 +38,9 @@ impl Paths {
     }
     pub fn backups(&self) -> PathBuf {
         self.config.join("backups")
+    }
+    pub fn skies(&self) -> PathBuf {
+        self.config.join("skies")
     }
     pub fn plugins(&self) -> PathBuf {
         self.config.join("plugins")
