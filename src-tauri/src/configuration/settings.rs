@@ -169,6 +169,20 @@ impl Default for Notifications {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(default, rename_all = "camelCase")]
+pub struct Discord {
+    /// Show "Running Roblox with Aeolus" on your Discord profile while Roblox runs.
+    pub rich_presence: bool,
+    /// Include the launch profile's name in the presence.
+    pub show_profile: bool,
+}
+impl Default for Discord {
+    fn default() -> Self {
+        Self { rich_presence: true, show_profile: true }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(default, rename_all = "camelCase")]
 pub struct Privacy {
     pub log_retention_days: u32,
     pub include_logs_in_reports: bool,
@@ -214,6 +228,7 @@ pub struct Settings {
     pub fast_flags: FastFlagSettings,
     pub plugins: PluginSettings,
     pub notifications: Notifications,
+    pub discord: Discord,
     pub privacy: Privacy,
     pub advanced: Advanced,
 }
@@ -228,6 +243,7 @@ impl Default for Settings {
             fast_flags: FastFlagSettings::default(),
             plugins: PluginSettings::default(),
             notifications: Notifications::default(),
+            discord: Discord::default(),
             privacy: Privacy::default(),
             advanced: Advanced::default(),
         }

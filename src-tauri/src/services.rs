@@ -259,7 +259,7 @@ pub async fn launch(app: &AppHandle, link: Option<String>, profile_id: Option<St
     let mode = if link.is_some() { "link" } else { "app" };
     state.logger.info("launch", format!("Launch requested ({mode}) with profile {}", profile.as_ref().map(|p| p.name.as_str()).unwrap_or("none")));
 
-    let result: AppResult<(u32, LaunchTarget)> = async {
+    let result: AppResult<(u32, Option<std::process::Child>, LaunchTarget)> = async {
         let args = launcher::build_args(link.as_deref())?;
         let mut target = resolve_target(&state)?;
         if target.managed && prefs.update_before_launch && state.settings().installation.update_before_launch {
@@ -284,10 +284,14 @@ pub async fn launch(app: &AppHandle, link: Option<String>, profile_id: Option<St
             state.logger.info("launch", format!("Applied {n} Fast Flags from {}", flag_profile.as_ref().map(|f| f.name.as_str()).unwrap_or("no profile")));
         }
         run_hooks(app, "beforeLaunch", None);
-        let pid = launcher::spawn_and_watch(&launcher::player_exe(&target.dir), &args, std::time::Duration::from_secs(6)).await?;
-        Ok((pid, target))
+        let (pid, child) = launcher::spawn_and_watch(&launcher::player_exe(&target.dir), &args, std::time::Duration::from_secs(6)).await?;
+        Ok((pid, child, target))
     }
     .await;
+    let (result, child) = match result {
+        Ok((pid, child, target)) => (Ok((pid, target)), child),
+        Err(e) => (Err(e), None),
+    };
 
     let record = match &result {
         Ok((pid, target)) => LaunchRecord {
@@ -330,6 +334,9 @@ pub async fn launch(app: &AppHandle, link: Option<String>, profile_id: Option<St
                 });
             }
             run_hooks(app, "afterLaunch", None);
+            if let (Some(child), Some(pid)) = (child, record.pid) {
+                start_session(app, pid, child, profile.as_ref().map(|p| p.name.clone()));
+            }
             if let Some(w) = app.get_webview_window("main") {
                 match prefs.after_launch {
                     AfterLaunch::Minimize => {
@@ -353,4 +360,45 @@ pub async fn launch(app: &AppHandle, link: Option<String>, profile_id: Option<St
     }
     changed(app, "launch");
     result.map(|_| record)
+}
+
+/// Track a running Roblox session: show Discord presence and record the play
+/// time when the player process exits.
+fn start_session(app: &AppHandle, pid: u32, mut child: std::process::Child, profile: Option<String>) {
+    let state = app.state::<AppState>();
+    let started_at = chrono::Local::now();
+    *state.session.lock().unwrap_or_else(|p| p.into_inner()) = Some(crate::state::RobloxSession { pid, started_at, profile });
+    refresh_presence(app);
+    let app = app.clone();
+    std::thread::Builder::new()
+        .name("aeolus-roblox-session".into())
+        .spawn(move || {
+            let _ = child.wait();
+            let state = app.state::<AppState>();
+            let ended = {
+                let mut s = state.session.lock().unwrap_or_else(|p| p.into_inner());
+                // Only end the session if it is still this process (a newer launch may have replaced it).
+                if s.as_ref().map(|x| x.pid) == Some(pid) { s.take() } else { None }
+            };
+            if let Some(sess) = ended {
+                let mins = (chrono::Local::now() - sess.started_at).num_minutes();
+                state.logger.info("launch", format!("Roblox closed after {mins} min (pid {pid})"));
+                state.activity.record(ActivityKind::Launch, "Roblox closed", Some(format!("Played for {}", if mins < 1 { "under a minute".to_string() } else { format!("{mins} min") })));
+                refresh_presence(&app);
+                changed(&app, "activity");
+            }
+        })
+        .ok();
+}
+
+/// Show or clear Discord Rich Presence to match the current session and settings.
+pub fn refresh_presence(app: &AppHandle) {
+    let state = app.state::<AppState>();
+    let d = state.settings().discord;
+    let session = state.session.lock().unwrap_or_else(|p| p.into_inner()).clone();
+    let info = match session {
+        Some(s) if d.rich_presence => Some(crate::system::discord::presence_for(s.profile.as_deref(), d.show_profile, s.started_at.timestamp())),
+        _ => None,
+    };
+    state.presence.set(info);
 }

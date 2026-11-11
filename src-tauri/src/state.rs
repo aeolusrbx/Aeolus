@@ -29,6 +29,16 @@ pub struct AppState {
     pub operation: Mutex<Option<(String, CancelToken)>>,
     pub started_minimized: AtomicBool,
     pub startup_notes: Mutex<Vec<String>>,
+    pub presence: crate::system::discord::Presence,
+    /// The Roblox session started by Aeolus that is currently running, if any.
+    pub session: Mutex<Option<RobloxSession>>,
+}
+
+#[derive(Debug, Clone)]
+pub struct RobloxSession {
+    pub pid: u32,
+    pub started_at: chrono::DateTime<chrono::Local>,
+    pub profile: Option<String>,
 }
 
 pub const SETTINGS_FILE: &str = "settings.json";
@@ -93,6 +103,8 @@ impl AppState {
             operation: Mutex::new(None),
             started_minimized: AtomicBool::new(false),
             startup_notes: Mutex::new(notes),
+            presence: crate::system::discord::Presence::start(logger.clone()),
+            session: Mutex::new(None),
             logger,
             paths,
         })

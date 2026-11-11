@@ -158,6 +158,21 @@ export default function Settings() {
                 <Toggle checked={s.advanced.handleRobloxLinks} disabled={integration.data ? !integration.data.protocol.supported : false} onChange={(v) => set("advanced", { handleRobloxLinks: v })} />
               </Field>
             </Group>
+            <Group title="Discord">
+              <Field
+                label="Discord Rich Presence"
+                description={
+                  integration.data && !integration.data.discordAvailable
+                    ? "Not available in this build of Aeolus."
+                    : "Shows \u201cRunning Roblox with Aeolus\u201d with the Aeolus logo on your Discord profile while Roblox is open. Aeolus must stay running (it can sit in the tray)."
+                }
+              >
+                <Toggle label="Discord Rich Presence" checked={s.discord.richPresence} disabled={integration.data ? !integration.data.discordAvailable : false} onChange={(v) => set("discord", { richPresence: v })} />
+              </Field>
+              <Field label="Show profile name" description="Adds \u201cProfile: <name>\u201d under the status.">
+                <Toggle label="Show profile name" checked={s.discord.showProfile} disabled={!s.discord.richPresence} onChange={(v) => set("discord", { showProfile: v })} />
+              </Field>
+            </Group>
             <Group title="Notifications">
               <Field label="Windows notifications" description="Use native notifications in addition to in-app messages."><Toggle checked={s.notifications.native} onChange={(v) => set("notifications", { native: v })} /></Field>
               <Field label="Update available"><Toggle checked={s.notifications.updateAvailable} onChange={(v) => set("notifications", { updateAvailable: v })} /></Field>

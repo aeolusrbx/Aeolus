@@ -26,6 +26,7 @@ export function createState() {
     fastFlags: { defaultProfileId: null, backupOnChange: true, maxBackups: 25, warnNotAllowlisted: true, blockInvalidValues: true },
     plugins: { requireReapprovalOnChange: true, notifyOnErrors: true },
     notifications: { native: true, updateAvailable: true, updateCompleted: true, updateFailed: true, versionChanged: true, launchFailed: true, pluginEvents: false },
+    discord: { richPresence: true, showProfile: true },
     privacy: { logRetentionDays: 14, includeLogsInReports: true },
     advanced: { developerMode: false, debugLogging: false, handleRobloxLinks: false, selfUpdateFeed: "", checkAeolusUpdatesOnStartup: true },
   };
@@ -121,7 +122,7 @@ export function handler(s: MockState) {
       case "reset_settings":
         return s.settings;
       case "system_integration":
-        return { launchAtStartup: s.settings.general.launchAtStartup, protocol: { supported: true, handlers: [], registeredToAeolus: false } };
+        return { discordAvailable: true, robloxRunning: false, launchAtStartup: s.settings.general.launchAtStartup, protocol: { supported: true, handlers: [], registeredToAeolus: false } };
       case "activity_list":
         return s.activity;
       case "activity_clear":

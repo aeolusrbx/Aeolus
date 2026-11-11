@@ -201,6 +201,7 @@ pub fn run() {
             if let tauri::RunEvent::Exit = event {
                 if let Some(st) = app.try_state::<state::AppState>() {
                     st.cancel_operation();
+                    st.presence.shutdown();
                     st.logger.info("app", "Aeolus exiting");
                 }
             }

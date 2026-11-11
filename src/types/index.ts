@@ -59,6 +59,7 @@ export interface Settings {
     launchFailed: boolean;
     pluginEvents: boolean;
   };
+  discord: { richPresence: boolean; showProfile: boolean };
   privacy: { logRetentionDays: number; includeLogsInReports: boolean };
   advanced: {
     developerMode: boolean;
@@ -338,6 +339,8 @@ export interface BackupEntry {
 }
 
 export interface SystemIntegration {
+  discordAvailable: boolean;
+  robloxRunning: boolean;
   launchAtStartup: boolean;
   protocol: { supported: boolean; handlers: [string, string | null][]; registeredToAeolus: boolean };
 }

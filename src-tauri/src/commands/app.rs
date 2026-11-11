@@ -83,6 +83,9 @@ pub fn save_settings(app: AppHandle, state: State<'_, AppState>, settings: Setti
         state.logger.info("system", format!("Roblox link handling {}", if new.advanced.handle_roblox_links { "registered" } else { "unregistered" }));
     }
     state.save_settings(new.clone())?;
+    if old.discord != new.discord {
+        services::refresh_presence(&app);
+    }
     if old.privacy.log_retention_days != new.privacy.log_retention_days {
         state.logger.enforce_retention(new.privacy.log_retention_days);
     }
@@ -108,14 +111,18 @@ pub fn reset_settings(app: AppHandle, state: State<'_, AppState>) -> AppResult<S
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SystemIntegration {
+    pub discord_available: bool,
+    pub roblox_running: bool,
     pub launch_at_startup: bool,
     pub protocol: protocol::ProtocolStatus,
 }
 
 #[tauri::command]
-pub fn system_integration(app: AppHandle) -> AppResult<SystemIntegration> {
+pub fn system_integration(app: AppHandle, state: State<'_, AppState>) -> AppResult<SystemIntegration> {
     let exe = std::env::current_exe()?;
     Ok(SystemIntegration {
+        discord_available: state.presence.available(),
+        roblox_running: state.session.lock().map(|s| s.is_some()).unwrap_or(false),
         launch_at_startup: app.autolaunch().is_enabled().unwrap_or(false),
         protocol: protocol::status(&exe),
     })

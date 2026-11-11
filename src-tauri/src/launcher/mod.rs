@@ -56,8 +56,10 @@ pub fn build_args(link: Option<&str>) -> AppResult<Vec<String>> {
 }
 
 /// Spawn the player and watch it briefly. A process that exits with a failure
-/// code within the watch window is reported as a failed launch.
-pub async fn spawn_and_watch(exe: &Path, args: &[String], watch: Duration) -> AppResult<u32> {
+/// code within the watch window is reported as a failed launch. Returns the pid
+/// and, if the player is still running after the watch window, its process handle
+/// (a clean early exit means it handed off to an already-running Roblox).
+pub async fn spawn_and_watch(exe: &Path, args: &[String], watch: Duration) -> AppResult<(u32, Option<std::process::Child>)> {
     if !exe.is_file() {
         return Err(AppError::NotFound(format!("{} was not found", exe.display())));
     }
@@ -71,7 +73,7 @@ pub async fn spawn_and_watch(exe: &Path, args: &[String], watch: Duration) -> Ap
     })?;
     let pid = child.id();
     let exe_s = exe.to_path_buf();
-    tokio::task::spawn_blocking(move || -> AppResult<u32> {
+    tokio::task::spawn_blocking(move || -> AppResult<(u32, Option<std::process::Child>)> {
         let start = std::time::Instant::now();
         while start.elapsed() < watch {
             match child.try_wait()? {
@@ -81,11 +83,11 @@ pub async fn spawn_and_watch(exe: &Path, args: &[String], watch: Duration) -> Ap
                         exe_s.file_name().unwrap_or_default().to_string_lossy()
                     )))
                 }
-                Some(_) => return Ok(pid), // clean exit, e.g. handed off to an existing instance
+                Some(_) => return Ok((pid, None)), // clean exit, e.g. handed off to an existing instance
                 None => std::thread::sleep(Duration::from_millis(250)),
             }
         }
-        Ok(pid)
+        Ok((pid, Some(child)))
     })
     .await
     .map_err(|e| AppError::Other(e.to_string()))?
@@ -149,6 +151,8 @@ mod tests {
         let ok = d.path().join("ok.sh");
         std::fs::write(&ok, "#!/bin/sh\nsleep 1\n").unwrap();
         std::fs::set_permissions(&ok, std::fs::Permissions::from_mode(0o755)).unwrap();
-        assert!(spawn_and_watch(&ok, &[], Duration::from_millis(300)).await.is_ok());
+        let (_, child) = spawn_and_watch(&ok, &[], Duration::from_millis(300)).await.unwrap();
+        let mut child = child.expect("still running after the watch window");
+        assert!(child.wait().unwrap().success());
     }
 }
