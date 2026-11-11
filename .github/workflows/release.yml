@@ -10,15 +10,26 @@ name: Release
 on:
   release:
     types: [published]
+  # Manual retry: Actions > Release > Run workflow, enter an existing release tag.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing release tag to build, e.g. v0.1.2"
+        required: true
 
 permissions:
   contents: write
+
+env:
+  TAG: ${{ github.event.release.tag_name || inputs.tag }}
 
 jobs:
   build-windows:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
 
       - uses: actions/setup-node@v4
         with:
@@ -35,8 +46,8 @@ jobs:
         shell: pwsh
         run: |
           $v = (Get-Content src-tauri/tauri.conf.json -Raw | ConvertFrom-Json).version
-          if ("v$v" -ne "${{ github.event.release.tag_name }}") {
-            throw "Release tag ${{ github.event.release.tag_name }} does not match app version v$v. Bump the version or fix the tag."
+          if ("v$v" -ne "${{ env.TAG }}") {
+            throw "Release tag ${{ env.TAG }} does not match app version v$v. Bump the version or fix the tag."
           }
 
       - name: Install dependencies
@@ -59,9 +70,9 @@ jobs:
           $hash = (Get-FileHash $exe.FullName -Algorithm SHA256).Hash.ToLower()
           $feed = [ordered]@{
             version = $v
-            url     = "https://github.com/${{ github.repository }}/releases/download/${{ github.event.release.tag_name }}/$($exe.Name)"
+            url     = "https://github.com/${{ github.repository }}/releases/download/${{ env.TAG }}/$($exe.Name)"
             sha256  = $hash
-            notes   = "See https://github.com/${{ github.repository }}/releases/tag/${{ github.event.release.tag_name }}"
+            notes   = "See https://github.com/${{ github.repository }}/releases/tag/${{ env.TAG }}"
           }
           $feed | ConvertTo-Json | Set-Content -Path aeolus-latest.json -Encoding utf8NoBOM
           Get-Content aeolus-latest.json
@@ -69,7 +80,7 @@ jobs:
       - name: Attach files to the release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.event.release.tag_name }}
+          tag_name: ${{ env.TAG }}
           files: |
             src-tauri/target/release/bundle/nsis/*-setup.exe
             src-tauri/target/release/bundle/msi/*.msi
