@@ -110,7 +110,7 @@ _Last updated: 2026-11-11 (v0.1.0)_
 | Native notifications with preferences | Implemented | |
 | Single instance (forwards links) | Implemented | |
 | roblox-player link handler with restore of previous handler | Implemented | |
-| Self-updater (feed, SHA-256 verify, run installer after exit) | Blocked | code done; needs a hosted release feed (no release server exists yet) |
+| Self-updater (feed, SHA-256 verify, run installer after exit) | Tested (W) | 0.1.0 → 0.1.1 from GitHub Releases on 2026-11-11 |
 
 ## Configuration
 
@@ -126,7 +126,7 @@ _Last updated: 2026-11-11 (v0.1.0)_
 | Feature | Status | Evidence / notes |
 |---|---|---|
 | NSIS installer (per-user, shortcuts, uninstaller, upgrades keep config) | Tested (W: install) | uninstall/upgrade not yet run |
-| MSI installer | Blocked | WiX only runs on Windows; configured in `tauri.conf.json` for a Windows build |
+| MSI installer | Implemented | built by the GitHub release workflow on Windows; not yet installed by hand |
 | Code signing | Not started | SmartScreen will warn until signed |
 
 ## Windows verification

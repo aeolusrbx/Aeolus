@@ -53,7 +53,13 @@ pub async fn check(http: &reqwest::Client, feed: &str, current: &str) -> AppResu
     if feed.trim().is_empty() {
         return Ok(SelfUpdateCheck { current: current.into(), latest: None, update_available: false, configured: false });
     }
-    let r: ReleaseInfo = http.get(feed.trim()).send().await?.error_for_status()?.json().await?;
+    let resp = http.get(feed.trim()).send().await?;
+    if resp.status() == reqwest::StatusCode::NOT_FOUND {
+        return Err(AppError::Validation(
+            "No release feed was found at that address. Check the URL, and that the repository and its latest release are public.".into(),
+        ));
+    }
+    let r: ReleaseInfo = resp.error_for_status()?.json().await?;
     validate_release(&r)?;
     Ok(SelfUpdateCheck { current: current.into(), update_available: newer(&r.version, current), latest: Some(r), configured: true })
 }
