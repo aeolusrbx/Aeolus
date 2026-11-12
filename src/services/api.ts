@@ -107,6 +107,11 @@ export const api = {
   modClear: (slot: string) => call<void>("mod_clear", { slot }),
   modsResetAll: () => call<void>("mods_reset_all"),
 
+  // games
+  gamesOverview: () => call<T.GamesOverview>("games_overview"),
+  gameHistoryClear: () => call<void>("game_history_clear"),
+  gameRejoin: (id: string, sameServer: boolean) => call<T.LaunchRecord>("game_rejoin", { id, sameServer }),
+
   // backups
   backupsOverview: () => call<T.BackupEntry[]>("backups_overview"),
   restoreBackup: (category: string, id: string) => call<void>("restore_backup", { category, id }),

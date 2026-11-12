@@ -23,6 +23,13 @@ pub struct PresenceInfo {
     pub state: Option<String>,
     /// Unix seconds; Discord shows "elapsed" from this.
     pub started_at: i64,
+    /// Art asset key or https URL for the big image (defaults to the Aeolus logo).
+    pub large_image: Option<String>,
+    pub large_text: Option<String>,
+    /// When set, the Aeolus logo is shown as the small badge.
+    pub small_logo: bool,
+    /// Up to two (label, url) buttons; "Get Aeolus" is added if there's room.
+    pub buttons: Vec<(String, String)>,
 }
 
 enum Cmd {
@@ -40,6 +47,33 @@ pub fn presence_for(profile: Option<&str>, show_profile: bool, started_at: i64) 
         details: "Running Roblox with Aeolus".into(),
         state: profile.filter(|_| show_profile).map(|p| format!("Profile: {p}")),
         started_at,
+        large_image: None,
+        large_text: None,
+        small_logo: false,
+        buttons: vec![],
+    }
+}
+
+/// Presence while in a specific game.
+pub fn presence_for_game(game: &crate::gamewatch::GameVisit, show_location: bool) -> PresenceInfo {
+    let name = game.name.clone().unwrap_or_else(|| "a Roblox game".into());
+    let mut state = game.creator.as_ref().map(|c| format!("by {c}"));
+    if show_location {
+        if let Some(l) = &game.location {
+            state = Some(match state {
+                Some(s) => format!("{s} · {l}"),
+                None => format!("Server in {l}"),
+            });
+        }
+    }
+    PresenceInfo {
+        details: format!("Playing {name}"),
+        state,
+        started_at: game.started_at.timestamp(),
+        large_image: game.icon_url.clone(),
+        large_text: Some(name),
+        small_logo: game.icon_url.is_some(),
+        buttons: vec![("View game".into(), format!("https://www.roblox.com/games/{}", game.place_id))],
     }
 }
 
@@ -91,15 +125,22 @@ impl Presence {
                                 }
                             }
                             let c = client.as_mut().expect("connected above");
+                            let aeolus_text = concat!("Aeolus ", env!("CARGO_PKG_VERSION"));
+                            let mut assets = activity::Assets::new()
+                                .large_image(info.large_image.as_deref().unwrap_or(LARGE_IMAGE_KEY))
+                                .large_text(info.large_text.as_deref().unwrap_or(aeolus_text));
+                            if info.small_logo {
+                                assets = assets.small_image(LARGE_IMAGE_KEY).small_text(aeolus_text);
+                            }
+                            let mut buttons: Vec<activity::Button> = info.buttons.iter().take(2).map(|(l, u)| activity::Button::new(l.as_str(), u.as_str())).collect();
+                            if buttons.len() < 2 {
+                                buttons.push(activity::Button::new("Get Aeolus", PROJECT_URL));
+                            }
                             let mut act = activity::Activity::new()
                                 .details(info.details.as_str())
                                 .timestamps(activity::Timestamps::new().start(info.started_at))
-                                .assets(
-                                    activity::Assets::new()
-                                        .large_image(LARGE_IMAGE_KEY)
-                                        .large_text(concat!("Aeolus ", env!("CARGO_PKG_VERSION"))),
-                                )
-                                .buttons(vec![activity::Button::new("Get Aeolus", PROJECT_URL)]);
+                                .assets(assets)
+                                .buttons(buttons);
                             if let Some(s) = &info.state {
                                 act = act.state(s.as_str());
                             }

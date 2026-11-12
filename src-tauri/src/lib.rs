@@ -5,6 +5,7 @@ pub mod configuration;
 pub mod diagnostics;
 pub mod error;
 pub mod fastflags;
+pub mod gamewatch;
 pub mod installation;
 pub mod launcher;
 pub mod mods;
@@ -208,6 +209,9 @@ pub fn run() {
             commands::mods::mod_set_enabled,
             commands::mods::mod_clear,
             commands::mods::mods_reset_all,
+            commands::games::games_overview,
+            commands::games::game_history_clear,
+            commands::games::game_rejoin,
         ])
         .build(tauri::generate_context!())
         .expect("error while building Aeolus")

@@ -32,6 +32,8 @@ pub struct AppState {
     pub presence: crate::system::discord::Presence,
     pub skies: crate::skies::SkyLibrary,
     pub mods: crate::mods::ModStore,
+    pub game_history: History<crate::gamewatch::GameVisit>,
+    pub current_game: Mutex<Option<crate::gamewatch::GameVisit>>,
     /// The Roblox session started by Aeolus that is currently running, if any.
     pub session: Mutex<Option<RobloxSession>>,
 }
@@ -52,6 +54,7 @@ pub const ACTIVITY_FILE: &str = "activity.json";
 pub const LAUNCHES_FILE: &str = "launch-history.json";
 pub const UPDATES_FILE: &str = "update-history.json";
 pub const PROTOCOL_BACKUP_FILE: &str = "protocol-backup.json";
+pub const GAME_HISTORY_FILE: &str = "game-history.json";
 
 /// Releases the operation slot when dropped.
 pub struct OperationGuard<'a>(&'a Mutex<Option<(String, CancelToken)>>);
@@ -108,6 +111,8 @@ impl AppState {
             presence: crate::system::discord::Presence::start(logger.clone()),
             skies: crate::skies::SkyLibrary::new(paths.skies()),
             mods: crate::mods::ModStore::new(paths.config.join("mods")),
+            game_history: History::load(paths.file(GAME_HISTORY_FILE), 300),
+            current_game: Mutex::new(None),
             session: Mutex::new(None),
             logger,
             paths,

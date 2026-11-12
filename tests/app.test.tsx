@@ -109,6 +109,20 @@ describe("Aeolus UI", () => {
     await waitFor(() => expect(state.settings.mods.skyPackId).toBe(null));
   });
 
+  it("shows game history with rejoin for public servers only", async () => {
+    render(<App />);
+    await screen.findByText("Welcome back");
+    expect(await screen.findByText("RIVALS")).toBeInTheDocument();
+    go("Launch");
+    expect(await screen.findByText("Game history")).toBeInTheDocument();
+    expect(screen.getByText("Ashburn, Virginia, US")).toBeInTheDocument();
+    const rejoins = screen.getAllByRole("button", { name: /Rejoin/ });
+    expect(rejoins).toHaveLength(1);
+    fireEvent.click(rejoins[0]);
+    await waitFor(() => expect(state.calls.some((c) => c.cmd === "game_rejoin" && c.args.id === "g1" && c.args.sameServer === true)).toBe(true));
+    expect(screen.getByText("Private server")).toBeInTheDocument();
+  });
+
   it("sets the classic oof preset and resets it", async () => {
     render(<App />);
     await screen.findByText("Welcome back");

@@ -39,6 +39,15 @@ impl<T: Serialize + DeserializeOwned + Clone> History<T> {
         g.truncate(self.cap);
         let _ = store::write_json(&self.path, &HistoryFile { schema_version: 1, entries: g.clone() });
     }
+    /// Update the first entry matching `pred` and persist.
+    pub fn update(&self, pred: impl Fn(&T) -> bool, f: impl FnOnce(&mut T)) -> bool {
+        let mut g = self.entries.lock().unwrap_or_else(|p| p.into_inner());
+        let Some(e) = g.iter_mut().find(|e| pred(e)) else { return false };
+        f(e);
+        let _ = store::write_json(&self.path, &HistoryFile { schema_version: 1, entries: g.clone() });
+        true
+    }
+
     pub fn list(&self) -> Vec<T> {
         self.entries.lock().unwrap_or_else(|p| p.into_inner()).clone()
     }

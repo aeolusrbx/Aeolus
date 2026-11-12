@@ -181,10 +181,28 @@ pub struct Discord {
     pub rich_presence: bool,
     /// Include the launch profile's name in the presence.
     pub show_profile: bool,
+    /// Show the game you're in (name, icon, creator) instead of just "Running Roblox".
+    pub show_game: bool,
 }
 impl Default for Discord {
     fn default() -> Self {
-        Self { rich_presence: true, show_profile: true }
+        Self { rich_presence: true, show_profile: true, show_game: true }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(default, rename_all = "camelCase")]
+pub struct Games {
+    /// Detect games from Roblox's logs and keep a history with rejoin.
+    pub track_games: bool,
+    /// Look up where the server is (sends the Roblox server's IP to ipinfo.io).
+    pub server_location: bool,
+    /// Show a notification with the server location when joining.
+    pub notify_location: bool,
+}
+impl Default for Games {
+    fn default() -> Self {
+        Self { track_games: true, server_location: true, notify_location: true }
     }
 }
 
@@ -236,6 +254,7 @@ pub struct Settings {
     pub plugins: PluginSettings,
     pub notifications: Notifications,
     pub discord: Discord,
+    pub games: Games,
     pub mods: Mods,
     pub privacy: Privacy,
     pub advanced: Advanced,
@@ -252,6 +271,7 @@ impl Default for Settings {
             plugins: PluginSettings::default(),
             notifications: Notifications::default(),
             discord: Discord::default(),
+            games: Games::default(),
             mods: Mods::default(),
             privacy: Privacy::default(),
             advanced: Advanced::default(),

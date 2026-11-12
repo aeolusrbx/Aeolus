@@ -11,6 +11,7 @@ import { useRestoreDialog } from "../components/RestoreDialog";
 import { useDialogs } from "../stores/dialogs";
 import { Logo } from "../components/Logo";
 import { ProgressView } from "../components/ProgressDock";
+import { GameRow } from "../components/GameHistory";
 import { Badge, Button, Card, EmptyState, SectionTitle, cx } from "../components/ui";
 import type { ActivityKind } from "../types";
 import { relativeTime } from "../utils/format";
@@ -43,6 +44,7 @@ export default function Home() {
   const overview = useResource(api.installOverview, ["install", "operation"]);
   const profiles = useResource(api.profilesGet, ["profiles"]);
   const activity = useResource(api.activityList, ["activity", "install", "launch", "fastflags", "profiles", "plugins", "settings", "all"]);
+  const games = useResource(api.gamesOverview, ["games"]);
   const actions = useRobloxActions();
   const openRestore = useRestoreDialog();
   const dialogs = useDialogs();
@@ -112,6 +114,12 @@ export default function Home() {
             )}
           </Card>
         </motion.div>
+
+        {games.data?.current && (
+          <Card className="mt-4 overflow-hidden border-success/30">
+            <GameRow game={games.data.current} live />
+          </Card>
+        )}
 
         {/* Status cards */}
         <div className="mt-5 grid grid-cols-4 gap-3">
@@ -192,6 +200,14 @@ export default function Home() {
             </Card>
           </div>
         </div>
+        {games.data && games.data.history.filter((g) => g.id !== games.data!.current?.id).length > 0 && (
+          <div className="mt-6">
+            <SectionTitle action={<Button size="sm" variant="ghost" onClick={() => navigate("launch")}>See all</Button>}>Recent games</SectionTitle>
+            <Card className="divide-y divide-line">
+              {games.data.history.filter((g) => g.id !== games.data!.current?.id).slice(0, 3).map((g) => <GameRow key={g.id} game={g} compact />)}
+            </Card>
+          </div>
+        )}
         {o?.detection.incomplete && o.detection.incomplete.length > 0 && !busy && (
           <Card className="mt-5 flex items-center gap-3 border-warning/30 p-4">
             <AlertCircle size={18} className="text-warning" />

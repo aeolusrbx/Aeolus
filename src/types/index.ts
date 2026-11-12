@@ -60,7 +60,8 @@ export interface Settings {
     launchFailed: boolean;
     pluginEvents: boolean;
   };
-  discord: { richPresence: boolean; showProfile: boolean };
+  discord: { richPresence: boolean; showProfile: boolean; showGame: boolean };
+  games: { trackGames: boolean; serverLocation: boolean; notifyLocation: boolean };
   mods: { skyPackId: string | null };
   privacy: { logRetentionDays: number; includeLogsInReports: boolean };
   advanced: {
@@ -392,4 +393,23 @@ export interface ModSlot {
   choice: ModChoice | null;
   previewUrl: string | null;
   presetPreviews: [string, string | null][];
+}
+
+export interface GameVisit {
+  id: string;
+  placeId: number;
+  universeId: number | null;
+  jobId: string;
+  serverKind: "public" | "private" | "reserved";
+  startedAt: string;
+  endedAt: string | null;
+  name: string | null;
+  creator: string | null;
+  iconUrl: string | null;
+  location: string | null;
+}
+export interface GamesOverview {
+  current: GameVisit | null;
+  history: GameVisit[];
+  tracking: boolean;
 }

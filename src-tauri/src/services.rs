@@ -372,11 +372,16 @@ fn start_session(app: &AppHandle, pid: u32, mut child: std::process::Child, prof
     let started_at = chrono::Local::now();
     *state.session.lock().unwrap_or_else(|p| p.into_inner()) = Some(crate::state::RobloxSession { pid, started_at, profile });
     refresh_presence(app);
+    let stop_watch = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    if state.settings().games.track_games {
+        start_game_watch(app, pid, std::time::SystemTime::now(), stop_watch.clone());
+    }
     let app = app.clone();
     std::thread::Builder::new()
         .name("aeolus-roblox-session".into())
         .spawn(move || {
             let _ = child.wait();
+            stop_watch.store(true, std::sync::atomic::Ordering::SeqCst);
             let state = app.state::<AppState>();
             let ended = {
                 let mut s = state.session.lock().unwrap_or_else(|p| p.into_inner());
@@ -399,11 +404,102 @@ pub fn refresh_presence(app: &AppHandle) {
     let state = app.state::<AppState>();
     let d = state.settings().discord;
     let session = state.session.lock().unwrap_or_else(|p| p.into_inner()).clone();
-    let info = match session {
-        Some(s) if d.rich_presence => Some(crate::system::discord::presence_for(s.profile.as_deref(), d.show_profile, s.started_at.timestamp())),
+    let game = state.current_game.lock().unwrap_or_else(|p| p.into_inner()).clone();
+    let info = match (session, game) {
+        (Some(_), Some(g)) if d.rich_presence && d.show_game => Some(crate::system::discord::presence_for_game(&g, state.settings().games.server_location)),
+        (Some(s), _) if d.rich_presence => Some(crate::system::discord::presence_for(s.profile.as_deref(), d.show_profile, s.started_at.timestamp())),
         _ => None,
     };
     state.presence.set(info);
+}
+
+/// Follow Roblox's log for this session and record game visits.
+fn start_game_watch(app: &AppHandle, pid: u32, since: std::time::SystemTime, stop: Arc<std::sync::atomic::AtomicBool>) {
+    let Some(dir) = crate::gamewatch::default_logs_dir() else { return };
+    let app = app.clone();
+    std::thread::Builder::new()
+        .name("aeolus-game-watch".into())
+        .spawn(move || {
+            // Roblox creates its log shortly after starting.
+            let mut log = None;
+            for _ in 0..90 {
+                if stop.load(std::sync::atomic::Ordering::SeqCst) {
+                    return;
+                }
+                log = crate::gamewatch::find_log(&dir, since);
+                if log.is_some() {
+                    break;
+                }
+                std::thread::sleep(std::time::Duration::from_secs(1));
+            }
+            let state = app.state::<AppState>();
+            let Some(log) = log else {
+                state.logger.warn("games", "Couldn't find Roblox's log file; game detection is off for this session");
+                return;
+            };
+            state.logger.debug("games", format!("Following {} for pid {pid}", log.file_name().unwrap_or_default().to_string_lossy()));
+            crate::gamewatch::follow(&log, stop, |c| on_game_change(&app, c));
+        })
+        .ok();
+}
+
+fn on_game_change(app: &AppHandle, change: crate::gamewatch::Change) {
+    use crate::gamewatch::Change;
+    let state = app.state::<AppState>();
+    match change {
+        Change::Joined(visit, ip) => {
+            state.logger.info("games", format!("Joined place {} ({:?} server)", visit.place_id, visit.server_kind));
+            *state.current_game.lock().unwrap_or_else(|p| p.into_inner()) = Some(visit.clone());
+            state.game_history.push(visit.clone());
+            refresh_presence(app);
+            changed(app, "games");
+            let app = app.clone();
+            tauri::async_runtime::spawn(async move {
+                let state = app.state::<AppState>();
+                let s = state.settings().games;
+                let details = crate::gamewatch::fetch_details(&state.http, visit.place_id, visit.universe_id).await;
+                let location = match ip {
+                    Some(ip) if s.server_location => crate::gamewatch::fetch_location(&state.http, &ip).await,
+                    _ => None,
+                };
+                let apply = |v: &mut crate::gamewatch::GameVisit| {
+                    v.universe_id = v.universe_id.or(details.universe_id);
+                    v.name = details.name.clone();
+                    v.creator = details.creator.clone();
+                    v.icon_url = details.icon_url.clone();
+                    v.location = location.clone();
+                };
+                state.game_history.update(|v| v.id == visit.id, apply);
+                {
+                    let mut cur = state.current_game.lock().unwrap_or_else(|p| p.into_inner());
+                    if let Some(c) = cur.as_mut().filter(|c| c.id == visit.id) {
+                        apply(c);
+                    }
+                }
+                let name = details.name.clone().unwrap_or_else(|| format!("place {}", visit.place_id));
+                state.activity.record(ActivityKind::Launch, format!("Joined {name}"), location.as_ref().map(|l| format!("Server in {l}")));
+                if let (Some(l), true) = (&location, s.notify_location) {
+                    notify(&app, "info", &format!("Joined {name}"), &format!("Server location: {l}"), true);
+                }
+                refresh_presence(&app);
+                changed(&app, "games");
+                changed(&app, "activity");
+            });
+        }
+        Change::Left(visit) => {
+            let ended = visit.ended_at;
+            state.game_history.update(|v| v.id == visit.id, |v| v.ended_at = ended);
+            {
+                let mut cur = state.current_game.lock().unwrap_or_else(|p| p.into_inner());
+                if cur.as_ref().map(|c| c.id == visit.id).unwrap_or(false) {
+                    *cur = None;
+                }
+            }
+            state.logger.info("games", format!("Left place {}", visit.place_id));
+            refresh_presence(app);
+            changed(app, "games");
+        }
+    }
 }
 
 /// Write the sky and mods for a launch into an installation. Problems are

@@ -2,6 +2,15 @@
 
 All notable changes to Aeolus are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/) and the project uses semantic versioning.
 
+## [0.1.6] — 2026-11-11
+
+### Added
+- **Game detection**: Aeolus reads Roblox's log while it runs to see which game and server you joined.
+- **Discord shows the game** you're playing: its name, icon and creator, server location, and a "View game" button (toggle in Settings → Launch).
+- **Server location**: city, region and country of the Roblox server, with an optional notification when you join.
+- **Game history** on the Launch page (and recent games on Home) with play time and location.
+- **Rejoin** the exact same server, or **Play** the game in any server. Private and reserved servers can only use Play.
+
 ## [0.1.5] — 2026-11-11
 
 ### Added

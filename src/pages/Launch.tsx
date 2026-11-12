@@ -8,6 +8,7 @@ import { useApp } from "../stores/app";
 import { useDialogs } from "../stores/dialogs";
 import { useToast } from "../stores/toasts";
 import { ProfileEditor, ProfileIcon } from "../components/ProfileEditor";
+import { GameRow } from "../components/GameHistory";
 import { Badge, Button, Card, EmptyState, IconButton, PageHeader, SectionTitle, cx } from "../components/ui";
 import type { Profile, ProfileInput } from "../types";
 import { formatDate, relativeTime } from "../utils/format";
@@ -19,6 +20,7 @@ export default function Launch() {
   const history = useResource(api.launchHistory, ["launch"]);
   const ov = useResource(api.installOverview, ["install"]);
   const skies = useResource(api.skiesOverview, ["skies"]);
+  const games = useResource(api.gamesOverview, ["games"]);
   const actions = useRobloxActions();
   const dialogs = useDialogs();
   const toast = useToast();
@@ -192,6 +194,29 @@ export default function Launch() {
             </Card>
           );
         })}
+      </div>
+
+      <div className="mt-8">
+        <SectionTitle
+          action={
+            games.data && games.data.history.length > 0 ? (
+              <Button size="sm" variant="ghost" onClick={async () => (await dialogs.confirm({ title: "Clear game history?", description: "Removes the list of games and servers you've played. Rejoin won't be available for them anymore.", confirmLabel: "Clear", tone: "danger" })) && act(() => api.gameHistoryClear())}>
+                Clear
+              </Button>
+            ) : undefined
+          }
+        >
+          Game history
+        </SectionTitle>
+        <Card className="divide-y divide-line">
+          {games.data?.history.length === 0 && (
+            <EmptyState
+              title={games.data.tracking ? "No games yet" : "Game tracking is off"}
+              description={games.data.tracking ? "Games you join after launching Roblox from Aeolus show up here, with their server location and a Rejoin button." : "Turn on game detection in Settings → Launch to keep a history here."}
+            />
+          )}
+          {games.data?.history.slice(0, 40).map((g) => <GameRow key={g.id} game={g} live={games.data?.current?.id === g.id} />)}
+        </Card>
       </div>
 
       <div className="mt-8">

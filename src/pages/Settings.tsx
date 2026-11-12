@@ -169,8 +169,22 @@ export default function Settings() {
               >
                 <Toggle label="Discord Rich Presence" checked={s.discord.richPresence} disabled={integration.data ? !integration.data.discordAvailable : false} onChange={(v) => set("discord", { richPresence: v })} />
               </Field>
+              <Field label="Show the game you're playing" description="Shows the game's name, icon and creator, plus a button to its page.">
+                <Toggle label="Show the game you're playing" checked={s.discord.showGame} disabled={!s.discord.richPresence} onChange={(v) => set("discord", { showGame: v })} />
+              </Field>
               <Field label="Show profile name" description="Adds \u201cProfile: <name>\u201d under the status.">
                 <Toggle label="Show profile name" checked={s.discord.showProfile} disabled={!s.discord.richPresence} onChange={(v) => set("discord", { showProfile: v })} />
+              </Field>
+            </Group>
+            <Group title="Games">
+              <Field label="Detect games" description="Reads Roblox's log while it runs to see which game and server you're in. Powers game history, Rejoin and the game in your Discord status.">
+                <Toggle label="Detect games" checked={s.games.trackGames} onChange={(v) => set("games", { trackGames: v })} />
+              </Field>
+              <Field label="Show server location" description="Looks up where the Roblox server is (city, region, country) using ipinfo.io. Only the Roblox server's address is sent, never yours.">
+                <Toggle label="Show server location" checked={s.games.serverLocation} disabled={!s.games.trackGames} onChange={(v) => set("games", { serverLocation: v })} />
+              </Field>
+              <Field label="Notify me where the server is" description="A notification like \u201cServer location: Ashburn, Virginia, US\u201d when you join.">
+                <Toggle label="Notify me where the server is" checked={s.games.notifyLocation} disabled={!s.games.trackGames || !s.games.serverLocation} onChange={(v) => set("games", { notifyLocation: v })} />
               </Field>
             </Group>
             <Group title="Notifications">

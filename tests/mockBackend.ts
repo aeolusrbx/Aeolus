@@ -26,7 +26,8 @@ export function createState() {
     fastFlags: { defaultProfileId: null, backupOnChange: true, maxBackups: 25, warnNotAllowlisted: true, blockInvalidValues: true },
     plugins: { requireReapprovalOnChange: true, notifyOnErrors: true },
     notifications: { native: true, updateAvailable: true, updateCompleted: true, updateFailed: true, versionChanged: true, launchFailed: true, pluginEvents: false },
-    discord: { richPresence: true, showProfile: true },
+    discord: { richPresence: true, showProfile: true, showGame: true },
+    games: { trackGames: true, serverLocation: true, notifyLocation: true },
     mods: { skyPackId: null },
     privacy: { logRetentionDays: 14, includeLogsInReports: true },
     advanced: { developerMode: false, debugLogging: false, handleRobloxLinks: false, selfUpdateFeed: "", checkAeolusUpdatesOnStartup: true },
@@ -92,7 +93,11 @@ export function createState() {
     { id: "cursor", kind: "cursor", label: "Cursor", description: "Roblox's default mouse cursor.", targets: ["content/textures/ArrowCursor.png"], presets: [{ id: "dot", label: "Dot" }, { id: "crosshair", label: "Crosshair" }], choice: null, previewUrl: null, presetPreviews: [["dot", null], ["crosshair", null]] },
     { id: "font", kind: "font", label: "Interface font", description: "Replaces Builder Sans.", targets: ["content/fonts/BuilderSans-Regular.otf"], presets: [], choice: null, previewUrl: null, presetPreviews: [] },
   ];
-  return { settings, flags, profiles, install, activity, logs, plugins, skies, mods, launches: [] as Any[], calls: [] as { cmd: string; args: Any }[] };
+  const games: Any[] = [
+    { id: "g1", placeId: 17625359962, universeId: 6035872082, jobId: "6a6584ef-7877-462b-bbcc-f230e884725e", serverKind: "public", startedAt: ago(40), endedAt: ago(10), name: "RIVALS", creator: "Nosniy Games", iconUrl: null, location: "Ashburn, Virginia, US" },
+    { id: "g2", placeId: 9391468976, universeId: 3508322461, jobId: "d1afac81-7489-46bd-9b44-dea5786982d3", serverKind: "private", startedAt: ago(90), endedAt: ago(70), name: "Jujutsu Shenanigans", creator: "Tze Studio", iconUrl: null, location: "Dallas, Texas, US" },
+  ];
+  return { settings, flags, profiles, install, activity, logs, plugins, skies, mods, games, launches: [] as Any[], calls: [] as { cmd: string; args: Any }[] };
 }
 
 export type MockState = ReturnType<typeof createState>;
@@ -212,6 +217,16 @@ export function handler(s: MockState) {
         const p = { ...args.input, id: "p" + Date.now(), createdAt: now(), lastUsedAt: null };
         s.profiles.profiles.push(p);
         return p;
+      }
+      case "games_overview":
+        return { current: null, history: s.games, tracking: s.settings.games.trackGames };
+      case "game_history_clear":
+        s.games = [];
+        return null;
+      case "game_rejoin": {
+        const g = s.games.find((x: Any) => x.id === args.id) as Any;
+        if (args.sameServer && g.serverKind !== "public") return err("Private servers can't be rejoined");
+        return { id: "r", at: now(), version: null, installPath: null, profile: null, fastFlagProfile: null, mode: "link", result: "started", error: null, suggestions: [], pid: 1 };
       }
       case "mods_overview":
         return s.mods;
