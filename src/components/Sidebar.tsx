@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
-import { Blocks, Download, Flag, Wand2, Home, Paintbrush, PanelLeftClose, PanelLeftOpen, Rocket, Settings as SettingsIcon, Stethoscope } from "lucide-react";
+import { api } from "../services/api";
+import { Blocks, MessageCircle, Download, Flag, Wand2, Home, Paintbrush, PanelLeftClose, PanelLeftOpen, Rocket, Settings as SettingsIcon, Stethoscope } from "lucide-react";
 import type { PageId } from "../types";
 import { useApp } from "../stores/app";
 import { Logo } from "./Logo";
@@ -62,6 +63,14 @@ export function Sidebar() {
 
       <div className={cx("flex items-center gap-2 border-t border-line px-3 py-2.5", collapsed && "flex-col")}>
         {!collapsed && <span className="flex-1 truncate text-[11px] text-fg-3">v{info?.version ?? "…"}</span>}
+        <button
+          aria-label="Join the Aeolus Discord"
+          title="Join the Aeolus Discord"
+          className="flex h-7 w-7 items-center justify-center rounded-md text-fg-3 hover:bg-surface hover:text-[#5865F2]"
+          onClick={() => api.openLink("discord").catch(() => undefined)}
+        >
+          <MessageCircle size={15} />
+        </button>
         <button
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           title={collapsed ? "Expand sidebar" : "Collapse sidebar"}

@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { open as openDialog, save as saveDialog } from "@tauri-apps/plugin-dialog";
-import { Copy, Download, RefreshCw, RotateCcw, Trash2, Upload } from "lucide-react";
+import { Copy, Download, ExternalLink, MessageCircle, RefreshCw, RotateCcw, Trash2, Upload } from "lucide-react";
+import { FpsCapInput } from "../components/FpsCap";
 import { api } from "../services/api";
 import { useApp } from "../stores/app";
 import { useResource } from "../hooks/useResource";
@@ -151,6 +152,9 @@ export default function Settings() {
                   {profiles.data?.profiles.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </Select>
               </Field>
+              <Field label="FPS cap" description="Sets Roblox's maximum frame rate before each launch (the same setting as in Roblox's menu). Roblox officially supports up to 240; higher values may be ignored. If FPS seems stuck lower, check V-Sync and your graphics card's own FPS limit. Profiles can override this.">
+                <FpsCapInput value={s.launch.fpsCap} inheritLabel="Don't change" onChange={(v) => set("launch", { fpsCap: v })} />
+              </Field>
               <Field label="Launch preferences" description="Fast Flags, auto-update, verification and after-launch behavior are set per profile.">
                 <Button size="sm" onClick={() => navigate("launch")}>Edit profiles</Button>
               </Field>
@@ -185,6 +189,18 @@ export default function Settings() {
               </Field>
               <Field label="Notify me where the server is" description="A notification like \u201cServer location: Ashburn, Virginia, US\u201d when you join.">
                 <Toggle label="Notify me where the server is" checked={s.games.notifyLocation} disabled={!s.games.trackGames || !s.games.serverLocation} onChange={(v) => set("games", { notifyLocation: v })} />
+              </Field>
+            </Group>
+            <Group title="Disconnects and crashes">
+              <Field label="After a disconnect" description={<>When you lose connection to a game, Aeolus can bring you back to the same server. <b>Ask</b> shows a notification and a Rejoin button. <b>Rejoin automatically</b> waits 10 seconds (so you can cancel) and only does it for connection errors, never after being kicked, and at most 3 times in 10 minutes.</>}>
+                <Select className="w-48" aria-label="After a disconnect" value={s.games.rejoin} disabled={!s.games.trackGames} onChange={(e) => set("games", { rejoin: e.target.value as S["games"]["rejoin"] })}>
+                  <option value="ask">Ask to rejoin</option>
+                  <option value="auto">Rejoin automatically</option>
+                  <option value="off">Do nothing</option>
+                </Select>
+              </Field>
+              <Field label="Crash help" description="When Roblox closes unexpectedly, Home shows what most likely happened and what to try. Always on." >
+                <span className="text-xs text-fg-3">On</span>
               </Field>
             </Group>
             <Group title="Notifications">
@@ -310,6 +326,10 @@ export default function Settings() {
             <p className="mx-auto mt-4 max-w-md text-[13px] text-fg-2">
               A Roblox bootstrapper and client manager. Aeolus installs and updates Roblox through Roblox's official distribution, and never asks for your password or account cookies.
             </p>
+            <div className="mt-5 flex justify-center gap-2">
+              <Button variant="primary" icon={<MessageCircle size={15} />} onClick={() => api.openLink("discord").catch((e) => dialogs.showError("Couldn't open the link", e))}>Join our Discord</Button>
+              <Button icon={<ExternalLink size={15} />} onClick={() => api.openLink("github").catch((e) => dialogs.showError("Couldn't open the link", e))}>GitHub</Button>
+            </div>
             <p className="mx-auto mt-3 max-w-md text-xs text-fg-3">Aeolus is an independent project and is not affiliated with or endorsed by Roblox Corporation.</p>
           </Card>
         )}

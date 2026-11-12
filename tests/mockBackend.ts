@@ -22,12 +22,12 @@ export function createState() {
     general: { theme: "dark", accent: "#FF861F", language: "en", launchAtStartup: false, startMinimized: false, minimizeToTray: false, defaultPage: "home", sidebarCollapsed: false },
     appearance: { animations: "enabled", compactNavigation: false, dashboardBackground: "glow", logoPresentation: "full", sidebarStyle: "solid" },
     installation: { customInstallRoot: null, scanOfficialInstall: true, scanOtherBootstrappers: true, backupBeforeDestructive: true, keepBackups: 10, checkUpdatesOnStartup: true, updateBeforeLaunch: true, keepDownloadCache: false },
-    launch: { defaultProfileId: "p1" },
+    launch: { defaultProfileId: "p1", fpsCap: null },
     fastFlags: { defaultProfileId: null, backupOnChange: true, maxBackups: 25, warnNotAllowlisted: true, blockInvalidValues: true },
     plugins: { requireReapprovalOnChange: true, notifyOnErrors: true },
     notifications: { native: true, updateAvailable: true, updateCompleted: true, updateFailed: true, versionChanged: true, launchFailed: true, pluginEvents: false },
     discord: { richPresence: true, showProfile: true, showGame: true },
-    games: { trackGames: true, serverLocation: true, notifyLocation: true },
+    games: { trackGames: true, serverLocation: true, notifyLocation: true, rejoin: "ask" },
     mods: { skyPackId: null },
     privacy: { logRetentionDays: 14, includeLogsInReports: true },
     advanced: { developerMode: false, debugLogging: false, handleRobloxLinks: false, selfUpdateFeed: "", checkAeolusUpdatesOnStartup: true },
@@ -97,7 +97,7 @@ export function createState() {
     { id: "g1", placeId: 17625359962, universeId: 6035872082, jobId: "6a6584ef-7877-462b-bbcc-f230e884725e", serverKind: "public", startedAt: ago(40), endedAt: ago(10), name: "RIVALS", creator: "Nosniy Games", iconUrl: null, location: "Ashburn, Virginia, US" },
     { id: "g2", placeId: 9391468976, universeId: 3508322461, jobId: "d1afac81-7489-46bd-9b44-dea5786982d3", serverKind: "private", startedAt: ago(90), endedAt: ago(70), name: "Jujutsu Shenanigans", creator: "Tze Studio", iconUrl: null, location: "Dallas, Texas, US" },
   ];
-  return { settings, flags, profiles, install, activity, logs, plugins, skies, mods, games, launches: [] as Any[], calls: [] as { cmd: string; args: Any }[] };
+  return { settings, flags, profiles, install, activity, logs, plugins, skies, mods, games, disconnect: null as Any | null, crash: null as Any | null, launches: [] as Any[], calls: [] as { cmd: string; args: Any }[] };
 }
 
 export type MockState = ReturnType<typeof createState>;
@@ -219,7 +219,18 @@ export function handler(s: MockState) {
         return p;
       }
       case "games_overview":
-        return { current: null, history: s.games, tracking: s.settings.games.trackGames };
+        return { current: null, history: s.games, tracking: s.settings.games.trackGames, disconnect: s.disconnect, crash: s.crash };
+      case "disconnect_rejoin":
+        s.disconnect = null;
+        return { id: "r", at: now(), version: null, installPath: null, profile: null, fastFlagProfile: null, mode: "link", result: "started", error: null, suggestions: [], pid: 1 };
+      case "disconnect_dismiss":
+        s.disconnect = null;
+        return null;
+      case "crash_dismiss":
+        s.crash = null;
+        return null;
+      case "open_link":
+        return null;
       case "game_history_clear":
         s.games = [];
         return null;

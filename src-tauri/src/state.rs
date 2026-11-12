@@ -34,6 +34,14 @@ pub struct AppState {
     pub mods: crate::mods::ModStore,
     pub game_history: History<crate::gamewatch::GameVisit>,
     pub current_game: Mutex<Option<crate::gamewatch::GameVisit>>,
+    /// The latest disconnect waiting for the player to rejoin or dismiss it.
+    pub disconnect: Mutex<Option<crate::state::Disconnect>>,
+    /// The latest unexpected Roblox exit, until dismissed.
+    pub crash: Mutex<Option<crate::gamewatch::problems::CrashReport>>,
+    /// Times of recent automatic rejoins (to stop rejoin loops).
+    pub auto_rejoins: Mutex<Vec<std::time::Instant>>,
+    /// A Roblox process Aeolus closed on purpose (not a crash).
+    pub expected_exit: Mutex<Option<u32>>,
     /// The Roblox session started by Aeolus that is currently running, if any.
     pub session: Mutex<Option<RobloxSession>>,
 }
@@ -43,6 +51,23 @@ pub struct RobloxSession {
     pub pid: u32,
     pub started_at: chrono::DateTime<chrono::Local>,
     pub profile: Option<String>,
+}
+
+#[derive(Debug, Clone, serde::Serialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct Disconnect {
+    pub id: String,
+    pub at: chrono::DateTime<chrono::Local>,
+    pub game: crate::gamewatch::GameVisit,
+    pub code: Option<u32>,
+    pub title: String,
+    pub detail: String,
+    /// Rejoining makes sense for this reason.
+    pub can_rejoin: bool,
+    /// The exact server can be rejoined (public server).
+    pub same_server: bool,
+    /// When set, Aeolus rejoins by itself at this time unless dismissed.
+    pub auto_at: Option<chrono::DateTime<chrono::Local>>,
 }
 
 pub const SETTINGS_FILE: &str = "settings.json";
@@ -113,6 +138,10 @@ impl AppState {
             mods: crate::mods::ModStore::new(paths.config.join("mods")),
             game_history: History::load(paths.file(GAME_HISTORY_FILE), 300),
             current_game: Mutex::new(None),
+            disconnect: Mutex::new(None),
+            crash: Mutex::new(None),
+            auto_rejoins: Mutex::new(vec![]),
+            expected_exit: Mutex::new(None),
             session: Mutex::new(None),
             logger,
             paths,

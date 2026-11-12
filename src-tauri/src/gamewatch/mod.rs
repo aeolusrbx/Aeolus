@@ -12,7 +12,14 @@
 //! [FLog::SingleSurfaceApp] leaveUGCGameInternal
 //! ```
 //!
+//!
+//! It also notices disconnects (a disconnect without `leaveUGCGameInternal`
+//! and no new join shortly after), the disconnect reason code when Roblox logs
+//! one, low-memory warnings and whether Roblox shut down normally.
+//!
 //! Only these lines are read; nothing else from the log is stored.
+
+pub mod problems;
 
 use once_cell::sync::Lazy;
 use regex::Regex;
@@ -21,7 +28,10 @@ use std::io::{Read, Seek, SeekFrom};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
-use std::time::{Duration, SystemTime};
+use std::time::{Duration, Instant, SystemTime};
+
+/// How long a disconnect must last without a new join (teleports) before it counts.
+pub const DISCONNECT_GRACE: Duration = Duration::from_secs(8);
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Event {
@@ -31,12 +41,23 @@ pub enum Event {
     Joined { ip: String },
     PrivateServer,
     ReservedServer,
-    Left,
+    /// The player left on purpose (menu → Leave, or switching games).
+    UserLeft,
+    /// The network connection to the server ended.
+    Disconnected,
+    /// A disconnect/kick reason code, e.g. 277.
+    Reason(u32),
+    LowMemory,
+    /// Roblox's normal shutdown lines.
+    CleanExit,
 }
 
 static JOINING: Lazy<Regex> = Lazy::new(|| Regex::new(r"! Joining game '([0-9a-fA-F\-]{36})' place (\d+) at ").unwrap());
 static UNIVERSE: Lazy<Regex> = Lazy::new(|| Regex::new(r"game_join_loadtime: placeid:(\d+),.*?universeid:(\d+)").unwrap());
 static UDMUX: Lazy<Regex> = Lazy::new(|| Regex::new(r"UDMUX Address = ([0-9]{1,3}(?:\.[0-9]{1,3}){3}), Port = \d+").unwrap());
+static REASON: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"(?i)(?:\(ID = (\d{3,4})\))|(?:reason\s*[:=]?\s*(\d{3,4})\b)|(?:error code\s*[:=]?\s*(\d{3,4})\b)").unwrap()
+});
 static JOINED: Lazy<Regex> = Lazy::new(|| Regex::new(r"\[FLog::Network\] serverId: ([0-9]{1,3}(?:\.[0-9]{1,3}){3})\|\d+").unwrap());
 
 pub fn parse_line(line: &str) -> Option<Event> {
@@ -52,8 +73,29 @@ pub fn parse_line(line: &str) -> Option<Event> {
     if let Some(c) = JOINED.captures(line) {
         return Some(Event::Joined { ip: c[1].to_string() });
     }
-    if line.contains("[FLog::SingleSurfaceApp] leaveUGCGameInternal") || line.contains("[FLog::Network] Time to disconnect replication data") {
-        return Some(Event::Left);
+    if line.contains("[FLog::SingleSurfaceApp] leaveUGCGameInternal") {
+        return Some(Event::UserLeft);
+    }
+    if line.contains("[FLog::Network] Time to disconnect replication data") || line.contains("[DFLog::NetworkClient] Client:Disconnect") {
+        return Some(Event::Disconnected);
+    }
+    if line.contains("RakNetMissingPingPong") {
+        return Some(Event::Reason(277));
+    }
+    let lower = line.to_ascii_lowercase();
+    if lower.contains("disconnect") || lower.contains("lost connection") || lower.contains("kick") {
+        if let Some(c) = REASON.captures(line) {
+            let n = c.get(1).or(c.get(2)).or(c.get(3)).and_then(|m| m.as_str().parse().ok());
+            if let Some(n) = n {
+                return Some(Event::Reason(n));
+            }
+        }
+    }
+    if line.contains("(Low Memory)") {
+        return Some(Event::LowMemory);
+    }
+    if line.contains("[DFLog::SystemDialogHandler] Platform handler was destroyed") || line.contains("[FLog::RobloxStarter] RobloxStarter destroyed") {
+        return Some(Event::CleanExit);
     }
     if line.contains("GameJoinUtil::joinGamePostPrivateServer") {
         return Some(Event::PrivateServer);
@@ -108,6 +150,22 @@ pub enum Change {
     /// Joined a server; the IP is only kept in memory to look up the location.
     Joined(GameVisit, Option<String>),
     Left(GameVisit),
+    /// The connection dropped and no new game was joined within the grace period.
+    Disconnected { visit: GameVisit, code: Option<u32> },
+}
+
+#[derive(Debug, Clone)]
+struct Suspect {
+    visit: GameVisit,
+    code: Option<u32>,
+    at: Instant,
+}
+
+/// What the log said about the session as a whole.
+#[derive(Debug, Clone, Default, PartialEq)]
+pub struct LogFacts {
+    pub clean_exit: bool,
+    pub low_memory: bool,
 }
 
 #[derive(Debug, Default)]
@@ -124,6 +182,9 @@ pub struct Tracker {
     pending: Option<Pending>,
     next_kind: Option<ServerKind>,
     current: Option<GameVisit>,
+    suspect: Option<Suspect>,
+    last_code: Option<u32>,
+    pub facts: LogFacts,
 }
 
 impl Tracker {
@@ -132,11 +193,41 @@ impl Tracker {
     }
 
     pub fn feed(&mut self, ev: Event) -> Vec<Change> {
+        self.feed_at(ev, Instant::now())
+    }
+
+    pub fn feed_at(&mut self, ev: Event, now: Instant) -> Vec<Change> {
         let mut out = vec![];
         match ev {
+            Event::LowMemory => self.facts.low_memory = true,
+            Event::CleanExit => self.facts.clean_exit = true,
+            Event::Reason(code) => {
+                self.last_code = Some(code);
+                if let Some(s) = self.suspect.as_mut() {
+                    s.code = s.code.or(Some(code));
+                }
+            }
+            Event::UserLeft => {
+                self.pending = None;
+                self.suspect = None;
+                if let Some(c) = self.leave() {
+                    out.push(c);
+                }
+            }
+            Event::Disconnected => {
+                self.pending = None;
+                if let Some(c) = self.leave() {
+                    if let Change::Left(v) = &c {
+                        self.suspect = Some(Suspect { visit: v.clone(), code: self.last_code, at: now });
+                    }
+                    out.push(c);
+                }
+            }
             Event::PrivateServer => self.next_kind = Some(ServerKind::Private),
             Event::ReservedServer => self.next_kind = Some(ServerKind::Reserved),
             Event::Joining { job_id, place_id } => {
+                self.suspect = None; // a teleport, not a disconnect
+                self.last_code = None;
                 if let Some(c) = self.leave() {
                     out.push(c); // teleported without a clean leave
                 }
@@ -171,14 +262,17 @@ impl Tracker {
                     out.push(Change::Joined(visit, p.public_ip.or(Some(ip))));
                 }
             }
-            Event::Left => {
-                self.pending = None;
-                if let Some(c) = self.leave() {
-                    out.push(c);
-                }
-            }
         }
         out
+    }
+
+    /// Report a disconnect once it has lasted [`DISCONNECT_GRACE`].
+    pub fn tick(&mut self, now: Instant) -> Option<Change> {
+        if self.suspect.as_ref().map(|s| now.duration_since(s.at) >= DISCONNECT_GRACE).unwrap_or(false) {
+            let s = self.suspect.take()?;
+            return Some(Change::Disconnected { visit: s.visit, code: s.code });
+        }
+        None
     }
 
     /// End the current visit (e.g. when Roblox closes).
@@ -216,7 +310,9 @@ pub fn find_log(dir: &Path, since: SystemTime) -> Option<PathBuf> {
 }
 
 /// Follow a log file until `stop` is set, calling `on_change` for each change.
-pub fn follow(path: &Path, stop: Arc<AtomicBool>, mut on_change: impl FnMut(Change)) {
+/// A disconnect that is still pending when Roblox closes is dropped (closing
+/// the window also disconnects).
+pub fn follow(path: &Path, stop: Arc<AtomicBool>, mut on_change: impl FnMut(Change)) -> LogFacts {
     let mut tracker = Tracker::default();
     let mut offset = 0u64;
     let mut carry = String::new();
@@ -246,7 +342,10 @@ pub fn follow(path: &Path, stop: Arc<AtomicBool>, mut on_change: impl FnMut(Chan
             if let Some(c) = tracker.leave() {
                 on_change(c);
             }
-            return;
+            return tracker.facts;
+        }
+        if let Some(c) = tracker.tick(Instant::now()) {
+            on_change(c);
         }
         std::thread::sleep(Duration::from_millis(750));
     }
@@ -325,7 +424,8 @@ mod tests {
         assert_eq!(evs[1], Event::Universe { place_id: 9391468976, universe_id: 3508322461 });
         assert_eq!(evs[2], Event::PublicAddress { ip: "128.116.86.33".into() });
         assert_eq!(evs[3], Event::Joined { ip: "128.116.86.33".into() });
-        assert_eq!(evs[4], Event::Left);
+        assert_eq!(evs[4], Event::UserLeft);
+        assert_eq!(evs[5], Event::Disconnected);
         assert!(parse_line("[FLog::Output] hello").is_none());
     }
 
@@ -333,7 +433,7 @@ mod tests {
     fn tracks_two_visits() {
         let mut t = Tracker::default();
         let changes: Vec<Change> = LOG.lines().filter_map(parse_line).flat_map(|e| t.feed(e)).collect();
-        // joined, left (two leave lines collapse to one), joined
+        // joined, left (the disconnect after leaving is ignored), joined
         assert_eq!(changes.len(), 3);
         let Change::Joined(a, ip) = &changes[0] else { panic!() };
         assert_eq!(a.place_id, 9391468976);
@@ -346,6 +446,55 @@ mod tests {
         assert_eq!(b.universe_id, Some(6035872082));
         assert_eq!(t.current().unwrap().place_id, 17625359962);
         assert!(matches!(t.leave(), Some(Change::Left(_))));
+    }
+
+    #[test]
+    fn parses_reasons_and_session_lines() {
+        assert_eq!(parse_line("2026-11-12T20:51:05Z,1,c,6,Info [DFLog::NetworkClient] Client:Disconnect"), Some(Event::Disconnected));
+        assert_eq!(parse_line("[FLog::Network] Lost connection with reason : Lost connection to the game server, please reconnect (ID = 277)"), Some(Event::Reason(277)));
+        assert_eq!(parse_line("[FLog::Network] Disconnection Notification. Reason: 279"), Some(Event::Reason(279)));
+        assert_eq!(parse_line("[FLog::Network] RakNetMissingPingPong"), Some(Event::Reason(277)));
+        // unrelated numbers are ignored
+        assert_eq!(parse_line("[FLog::CreatorWarning] Warning: HTTP error code:`429`"), None);
+        assert_eq!(parse_line("[DFLog::SignalRCoreError] ID: 1 Disconnected - stop() called"), None);
+        assert_eq!(parse_line("[FLog::SingleSurfaceApp] processLowMemoryWarning ... (Low Memory) destroying the Lua app"), Some(Event::LowMemory));
+        assert_eq!(parse_line("6,Info [DFLog::SystemDialogHandler] Platform handler was destroyed."), Some(Event::CleanExit));
+    }
+
+    fn join(t: &mut Tracker, now: Instant) -> GameVisit {
+        t.feed_at(Event::Joining { job_id: "b".repeat(36), place_id: 7 }, now);
+        let c = t.feed_at(Event::Joined { ip: "1.2.3.4".into() }, now);
+        let Change::Joined(v, _) = &c[0] else { panic!() };
+        v.clone()
+    }
+
+    #[test]
+    fn detects_disconnects_but_not_leaves_or_teleports() {
+        let t0 = Instant::now();
+        // A real disconnect with a reason.
+        let mut t = Tracker::default();
+        let v = join(&mut t, t0);
+        assert!(matches!(&t.feed_at(Event::Disconnected, t0)[0], Change::Left(_)));
+        t.feed_at(Event::Reason(277), t0);
+        assert!(t.tick(t0 + Duration::from_secs(3)).is_none(), "waits for the grace period");
+        let Some(Change::Disconnected { visit, code }) = t.tick(t0 + DISCONNECT_GRACE) else { panic!() };
+        assert_eq!((visit.id, code), (v.id, Some(277)));
+        assert!(t.tick(t0 + DISCONNECT_GRACE * 2).is_none(), "reported once");
+
+        // Leaving from the menu is not a disconnect.
+        let mut t = Tracker::default();
+        join(&mut t, t0);
+        t.feed_at(Event::UserLeft, t0);
+        t.feed_at(Event::Disconnected, t0);
+        assert!(t.tick(t0 + DISCONNECT_GRACE).is_none());
+
+        // A teleport (disconnect followed by a new join) is not a disconnect.
+        let mut t = Tracker::default();
+        join(&mut t, t0);
+        t.feed_at(Event::Disconnected, t0);
+        join(&mut t, t0 + Duration::from_secs(2));
+        assert!(t.tick(t0 + DISCONNECT_GRACE * 2).is_none());
+        assert!(t.current().is_some());
     }
 
     #[test]
@@ -371,6 +520,7 @@ mod tests {
         let got = Arc::new(std::sync::Mutex::new(vec![]));
         let (s2, g2, p2) = (stop.clone(), got.clone(), p.clone());
         let h = std::thread::spawn(move || follow(&p2, s2, |c| g2.lock().unwrap().push(c)));
+        writeln!(f, "x [FLog::SingleSurfaceApp] processLowMemoryWarning ... (Low Memory) destroying the Lua app").unwrap();
         let lines: Vec<&str> = LOG.lines().collect();
         // write a line in two pieces to check partial-line handling
         let (a, b) = lines[1].split_at(30);
@@ -385,7 +535,8 @@ mod tests {
         std::thread::sleep(Duration::from_millis(1600));
         assert!(matches!(got.lock().unwrap().first(), Some(Change::Joined(v, _)) if v.place_id == 9391468976));
         stop.store(true, Ordering::SeqCst);
-        h.join().unwrap();
+        let facts = h.join().unwrap();
+        assert_eq!(facts, LogFacts { clean_exit: false, low_memory: true });
         assert!(matches!(got.lock().unwrap().last(), Some(Change::Left(_))), "closing Roblox ends the visit");
     }
 }

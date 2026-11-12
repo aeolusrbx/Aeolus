@@ -259,6 +259,8 @@ pub async fn launch(app: &AppHandle, link: Option<String>, profile_id: Option<St
     let mode = if link.is_some() { "link" } else { "app" };
     state.logger.info("launch", format!("Launch requested ({mode}) with profile {}", profile.as_ref().map(|p| p.name.as_str()).unwrap_or("none")));
 
+    let mut used_flags = false;
+    let mut used_mods = false;
     let result: AppResult<(u32, Option<std::process::Child>, LaunchTarget)> = async {
         let args = launcher::build_args(link.as_deref())?;
         let mut target = resolve_target(&state)?;
@@ -282,6 +284,17 @@ pub async fn launch(app: &AppHandle, link: Option<String>, profile_id: Option<St
             let flags = flag_profile.as_ref().map(|f| f.flags.clone()).unwrap_or_default();
             let n = crate::fastflags::apply_to_install(&target.dir, &flags, &state.backups)?;
             state.logger.info("launch", format!("Applied {n} Fast Flags from {}", flag_profile.as_ref().map(|f| f.name.as_str()).unwrap_or("no profile")));
+            used_flags = n > 0;
+        }
+        if prefs.apply_mods {
+            used_mods = state.mods.plan(&target.dir).map(|(_, used)| !used.is_empty()).unwrap_or(false);
+        }
+        if let Some(cap) = prefs.fps_cap.or(state.settings().launch.fps_cap) {
+            match crate::fpscap::settings_path().map(|p| crate::fpscap::apply(&p, cap)) {
+                Some(Ok(prev)) => state.logger.info("launch", format!("FPS cap set to {cap} (was {})", prev.map(|p| p.to_string()).unwrap_or_else(|| "not set".into()))),
+                Some(Err(e)) => state.logger.warn("launch", format!("Could not set the FPS cap: {e}")),
+                None => {}
+            }
         }
         if let Err(e) = apply_content(&state, profile.as_ref().and_then(|p| p.sky.as_deref()), prefs.apply_mods, &target.dir) {
             state.logger.warn("mods", format!("Could not apply sky/mods: {e}"));
@@ -337,8 +350,9 @@ pub async fn launch(app: &AppHandle, link: Option<String>, profile_id: Option<St
                 });
             }
             run_hooks(app, "afterLaunch", None);
+            *state.crash.lock().unwrap_or_else(|p| p.into_inner()) = None;
             if let (Some(child), Some(pid)) = (child, record.pid) {
-                start_session(app, pid, child, profile.as_ref().map(|p| p.name.clone()));
+                start_session(app, pid, child, profile.as_ref().map(|p| p.name.clone()), used_flags, used_mods);
             }
             if let Some(w) = app.get_webview_window("main") {
                 match prefs.after_launch {
@@ -367,21 +381,20 @@ pub async fn launch(app: &AppHandle, link: Option<String>, profile_id: Option<St
 
 /// Track a running Roblox session: show Discord presence and record the play
 /// time when the player process exits.
-fn start_session(app: &AppHandle, pid: u32, mut child: std::process::Child, profile: Option<String>) {
+fn start_session(app: &AppHandle, pid: u32, mut child: std::process::Child, profile: Option<String>, used_flags: bool, used_mods: bool) {
     let state = app.state::<AppState>();
     let started_at = chrono::Local::now();
     *state.session.lock().unwrap_or_else(|p| p.into_inner()) = Some(crate::state::RobloxSession { pid, started_at, profile });
     refresh_presence(app);
     let stop_watch = Arc::new(std::sync::atomic::AtomicBool::new(false));
-    if state.settings().games.track_games {
-        start_game_watch(app, pid, std::time::SystemTime::now(), stop_watch.clone());
-    }
+    let watch = if state.settings().games.track_games { start_game_watch(app, pid, std::time::SystemTime::now(), stop_watch.clone()) } else { None };
     let app = app.clone();
     std::thread::Builder::new()
         .name("aeolus-roblox-session".into())
         .spawn(move || {
-            let _ = child.wait();
+            let status = child.wait().ok();
             stop_watch.store(true, std::sync::atomic::Ordering::SeqCst);
+            let facts = watch.and_then(|h| h.join().ok()).unwrap_or_default();
             let state = app.state::<AppState>();
             let ended = {
                 let mut s = state.session.lock().unwrap_or_else(|p| p.into_inner());
@@ -393,6 +406,23 @@ fn start_session(app: &AppHandle, pid: u32, mut child: std::process::Child, prof
                 state.logger.info("launch", format!("Roblox closed after {mins} min (pid {pid})"));
                 state.activity.record(ActivityKind::Launch, "Roblox closed", Some(format!("Played for {}", if mins < 1 { "under a minute".to_string() } else { format!("{mins} min") })));
                 refresh_presence(&app);
+                let expected = {
+                    let mut e = state.expected_exit.lock().unwrap_or_else(|p| p.into_inner());
+                    if *e == Some(pid) { e.take().is_some() } else { false }
+                };
+                let code = status.and_then(|s| s.code());
+                if !expected {
+                    state.logger.debug("launch", format!("Roblox exit code: {}", code.map(crate::gamewatch::problems::format_code).unwrap_or_else(|| "unknown".into())));
+                    let game = state.game_history.list().into_iter().find(|v| v.started_at >= sess.started_at).map(|v| v.name.unwrap_or_else(|| format!("place {}", v.place_id)));
+                    let session_facts = crate::gamewatch::problems::SessionFacts { clean_exit: facts.clean_exit, low_memory: facts.low_memory, used_fast_flags: used_flags, used_mods, game };
+                    if let Some(report) = crate::gamewatch::problems::crash(code, &session_facts) {
+                        state.logger.error("launch", format!("{} (exit code {})", report.title, report.exit_code));
+                        state.activity.record(ActivityKind::Error, report.title.clone(), Some(report.explanation.clone()));
+                        notify(&app, "error", &report.title, "Open Aeolus to see what happened and how to fix it.", true);
+                        *state.crash.lock().unwrap_or_else(|p| p.into_inner()) = Some(report);
+                        changed(&app, "games");
+                    }
+                }
                 changed(&app, "activity");
             }
         })
@@ -414,8 +444,8 @@ pub fn refresh_presence(app: &AppHandle) {
 }
 
 /// Follow Roblox's log for this session and record game visits.
-fn start_game_watch(app: &AppHandle, pid: u32, since: std::time::SystemTime, stop: Arc<std::sync::atomic::AtomicBool>) {
-    let Some(dir) = crate::gamewatch::default_logs_dir() else { return };
+fn start_game_watch(app: &AppHandle, pid: u32, since: std::time::SystemTime, stop: Arc<std::sync::atomic::AtomicBool>) -> Option<std::thread::JoinHandle<crate::gamewatch::LogFacts>> {
+    let dir = crate::gamewatch::default_logs_dir()?;
     let app = app.clone();
     std::thread::Builder::new()
         .name("aeolus-game-watch".into())
@@ -424,7 +454,7 @@ fn start_game_watch(app: &AppHandle, pid: u32, since: std::time::SystemTime, sto
             let mut log = None;
             for _ in 0..90 {
                 if stop.load(std::sync::atomic::Ordering::SeqCst) {
-                    return;
+                    return Default::default();
                 }
                 log = crate::gamewatch::find_log(&dir, since);
                 if log.is_some() {
@@ -435,12 +465,12 @@ fn start_game_watch(app: &AppHandle, pid: u32, since: std::time::SystemTime, sto
             let state = app.state::<AppState>();
             let Some(log) = log else {
                 state.logger.warn("games", "Couldn't find Roblox's log file; game detection is off for this session");
-                return;
+                return Default::default();
             };
             state.logger.debug("games", format!("Following {} for pid {pid}", log.file_name().unwrap_or_default().to_string_lossy()));
-            crate::gamewatch::follow(&log, stop, |c| on_game_change(&app, c));
+            crate::gamewatch::follow(&log, stop, |c| on_game_change(&app, c))
         })
-        .ok();
+        .ok()
 }
 
 fn on_game_change(app: &AppHandle, change: crate::gamewatch::Change) {
@@ -450,6 +480,7 @@ fn on_game_change(app: &AppHandle, change: crate::gamewatch::Change) {
         Change::Joined(visit, ip) => {
             state.logger.info("games", format!("Joined place {} ({:?} server)", visit.place_id, visit.server_kind));
             *state.current_game.lock().unwrap_or_else(|p| p.into_inner()) = Some(visit.clone());
+            *state.disconnect.lock().unwrap_or_else(|p| p.into_inner()) = None;
             state.game_history.push(visit.clone());
             refresh_presence(app);
             changed(app, "games");
@@ -499,7 +530,128 @@ fn on_game_change(app: &AppHandle, change: crate::gamewatch::Change) {
             refresh_presence(app);
             changed(app, "games");
         }
+        Change::Disconnected { visit, code } => on_disconnect(app, visit, code),
     }
+}
+
+/// Seconds before an automatic rejoin.
+pub const AUTO_REJOIN_SECS: i64 = 10;
+
+fn on_disconnect(app: &AppHandle, visit: crate::gamewatch::GameVisit, code: Option<u32>) {
+    use crate::configuration::settings::RejoinMode;
+    use crate::gamewatch::problems::{self, RejoinPolicy};
+    let state = app.state::<AppState>();
+    // The history entry has the name and icon filled in by now.
+    let game = state.game_history.list().into_iter().find(|v| v.id == visit.id).unwrap_or(visit);
+    let name = game.name.clone().unwrap_or_else(|| format!("place {}", game.place_id));
+    let ex = problems::disconnect(code);
+    let code_text = code.map(|c| format!(" (error {c})")).unwrap_or_default();
+    state.logger.warn("games", format!("Disconnected from place {}{code_text}: {}", game.place_id, ex.title));
+    state.activity.record(ActivityKind::Error, format!("Disconnected from {name}"), Some(format!("{}{code_text}", ex.title)));
+    let mode = state.settings().games.rejoin;
+    if mode == RejoinMode::Off {
+        changed(app, "activity");
+        return;
+    }
+    let can_rejoin = ex.policy != RejoinPolicy::Never;
+    let auto = mode == RejoinMode::Auto && ex.policy == RejoinPolicy::Auto && auto_rejoin_allowed(&state);
+    let now = chrono::Local::now();
+    let d = crate::state::Disconnect {
+        id: uuid::Uuid::new_v4().to_string(),
+        at: now,
+        same_server: game.can_rejoin(),
+        game,
+        code,
+        title: ex.title.into(),
+        detail: ex.detail.into(),
+        can_rejoin,
+        auto_at: auto.then(|| now + chrono::Duration::seconds(AUTO_REJOIN_SECS)),
+    };
+    *state.disconnect.lock().unwrap_or_else(|p| p.into_inner()) = Some(d.clone());
+    let body = if auto {
+        format!("{}{code_text}. Rejoining in {AUTO_REJOIN_SECS} seconds…", ex.title)
+    } else if can_rejoin {
+        format!("{}{code_text}. Open Aeolus to rejoin.", ex.title)
+    } else {
+        format!("{}{code_text}.", ex.title)
+    };
+    notify(app, "warning", &format!("Disconnected from {name}"), &body, true);
+    if let Some(w) = app.get_webview_window("main") {
+        let _ = w.show();
+        let _ = w.unminimize();
+        let _ = w.set_focus();
+    }
+    let _ = app.emit(EV_NAVIGATE, "home");
+    changed(app, "games");
+    changed(app, "activity");
+    if auto {
+        let app = app.clone();
+        tauri::async_runtime::spawn(async move {
+            tokio::time::sleep(std::time::Duration::from_secs(AUTO_REJOIN_SECS as u64)).await;
+            let still_waiting = app.state::<AppState>().disconnect.lock().map(|g| g.as_ref().map(|x| x.id == d.id).unwrap_or(false)).unwrap_or(false);
+            if still_waiting {
+                if let Err(e) = rejoin_after_disconnect(&app, true).await {
+                    notify(&app, "error", "Couldn't rejoin", &e.to_string(), true);
+                }
+            }
+        });
+    }
+}
+
+/// At most 3 automatic rejoins in 10 minutes, so a broken server can't cause a loop.
+fn auto_rejoin_allowed(state: &AppState) -> bool {
+    let mut g = state.auto_rejoins.lock().unwrap_or_else(|p| p.into_inner());
+    g.retain(|t| t.elapsed() < std::time::Duration::from_secs(600));
+    g.len() < 3
+}
+
+/// Rejoin the game from the pending disconnect, closing the disconnected Roblox first.
+pub async fn rejoin_after_disconnect(app: &AppHandle, automatic: bool) -> AppResult<LaunchRecord> {
+    let state = app.state::<AppState>();
+    let d = state
+        .disconnect
+        .lock()
+        .unwrap_or_else(|p| p.into_inner())
+        .take()
+        .ok_or_else(|| AppError::NotFound("There's no disconnect to rejoin from.".into()))?;
+    changed(app, "games");
+    if !d.can_rejoin {
+        return Err(AppError::Validation(format!("{}: rejoining won't help here.", d.title)));
+    }
+    if automatic {
+        state.auto_rejoins.lock().unwrap_or_else(|p| p.into_inner()).push(std::time::Instant::now());
+    }
+    close_running_roblox(app).await;
+    let link = if d.same_server { d.game.rejoin_link() } else { d.game.play_link() };
+    state.logger.info("games", format!("{} place {} after a disconnect", if automatic { "Automatically rejoining" } else { "Rejoining" }, d.game.place_id));
+    launch(app, Some(link), None).await
+}
+
+/// Close the Roblox window Aeolus started (e.g. stuck on a disconnect message).
+pub async fn close_running_roblox(app: &AppHandle) {
+    let state = app.state::<AppState>();
+    let Some(pid) = state.session.lock().unwrap_or_else(|p| p.into_inner()).as_ref().map(|s| s.pid) else { return };
+    *state.expected_exit.lock().unwrap_or_else(|p| p.into_inner()) = Some(pid);
+    kill_process(pid);
+    for _ in 0..40 {
+        if state.session.lock().unwrap_or_else(|p| p.into_inner()).as_ref().map(|s| s.pid) != Some(pid) {
+            return;
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+    }
+    state.logger.warn("games", format!("Roblox (pid {pid}) didn't close in time"));
+}
+
+#[cfg(windows)]
+fn kill_process(pid: u32) {
+    use std::os::windows::process::CommandExt;
+    const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+    let _ = std::process::Command::new("taskkill").args(["/PID", &pid.to_string(), "/F"]).creation_flags(CREATE_NO_WINDOW).status();
+}
+
+#[cfg(not(windows))]
+fn kill_process(pid: u32) {
+    let _ = std::process::Command::new("kill").arg(pid.to_string()).status();
 }
 
 /// Write the sky and mods for a launch into an installation. Problems are

@@ -110,6 +110,9 @@ _Last updated: 2026-11-11 (v0.1.0)_
 | Native notifications with preferences | Implemented | |
 | Single instance (forwards links) | Implemented | |
 | Mods: sounds, cursors, fonts (files + presets, per-profile switch, restore originals) | Tested (R, V) | not yet tried in Roblox |
+| FPS cap via GlobalBasicSettings_13.xml (global + per profile) | Tested (R, V) | file format checked against the real file on Roblox 0.747 |
+| Disconnect detection + rejoin (ask / automatic) | Tested (R, V) | Roblox's disconnect reason lines could not be checked against a real disconnect log yet |
+| Crash help (exit code + log) | Tested (R, V) | not yet seen with a real crash |
 | Game detection from Roblox logs, game in Discord, server location, game history, Rejoin/Play | Tested (R, V) | log format checked against real Roblox 0.747 logs; not yet tried live |
 | Custom skies (.tex packs, global + per-profile, restore originals) | Tested (R, V) | not yet tried with a real sky pack in Roblox |
 | Discord Rich Presence (toggle, profile name, play time) | Tested (R, W) | seen in Discord on 2026-11-11; another app's presence (e.g. Medal) can take priority |

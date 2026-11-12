@@ -27,11 +27,13 @@ pub struct LaunchPrefs {
     pub verify_before_launch: bool,
     /// Apply your sounds, cursors and fonts from the Mods page.
     pub apply_mods: bool,
+    /// FPS cap for this profile. None = use the global setting.
+    pub fps_cap: Option<u32>,
     pub after_launch: AfterLaunch,
 }
 impl Default for LaunchPrefs {
     fn default() -> Self {
-        Self { apply_fast_flags: true, update_before_launch: true, verify_before_launch: false, apply_mods: true, after_launch: AfterLaunch::Nothing }
+        Self { apply_fast_flags: true, update_before_launch: true, verify_before_launch: false, apply_mods: true, fps_cap: None, after_launch: AfterLaunch::Nothing }
     }
 }
 
@@ -137,6 +139,9 @@ impl ProfileStore {
         let a = &input.accent;
         if !(a.len() == 7 && a.starts_with('#') && a[1..].chars().all(|c| c.is_ascii_hexdigit())) {
             return Err(AppError::Validation("Accent must be a hex color like #FF861F".into()));
+        }
+        if let Some(cap) = input.launch.fps_cap {
+            crate::fpscap::validate(cap)?;
         }
         if input.description.len() > 300 {
             return Err(AppError::Validation("Description is too long".into()));

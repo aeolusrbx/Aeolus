@@ -2,6 +2,14 @@
 
 All notable changes to Aeolus are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/) and the project uses semantic versioning.
 
+## [0.2.0] — 2026-11-12
+
+### Added
+- **FPS cap**: choose 30, 60, 120, 144, 165 or 240 FPS, or type any number up to 9999. Set it in Settings → Launch, or per launch profile. Aeolus writes it to Roblox's own setting before launch. Roblox officially supports up to 240, so higher values may be ignored.
+- **Rejoin after a disconnect**: when you lose connection to a game, Aeolus shows a "Disconnected" card on Home and a notification with a Rejoin button that brings you back to the same server. You can also choose "Rejoin automatically", which waits 10 seconds so you can cancel. Automatic rejoin only happens for connection errors (never after a kick), and at most 3 times in 10 minutes.
+- **Crash help**: when Roblox crashes or closes with an error, Home explains the likely cause in plain English (graphics driver, memory, overlays and more) and lists what to try.
+- **Discord**: a "Join our Discord" button in Settings → About and in the sidebar.
+
 ## [0.1.6] — 2026-11-11
 
 ### Added

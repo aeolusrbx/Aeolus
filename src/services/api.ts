@@ -111,6 +111,10 @@ export const api = {
   gamesOverview: () => call<T.GamesOverview>("games_overview"),
   gameHistoryClear: () => call<void>("game_history_clear"),
   gameRejoin: (id: string, sameServer: boolean) => call<T.LaunchRecord>("game_rejoin", { id, sameServer }),
+  disconnectRejoin: () => call<T.LaunchRecord>("disconnect_rejoin"),
+  disconnectDismiss: () => call<void>("disconnect_dismiss"),
+  crashDismiss: () => call<void>("crash_dismiss"),
+  openLink: (which: "discord" | "github" | "releases") => call<void>("open_link", { which }),
 
   // backups
   backupsOverview: () => call<T.BackupEntry[]>("backups_overview"),

@@ -3,6 +3,12 @@
 <h1 align="center">Aeolus</h1>
 <p align="center">A Roblox bootstrapper and client manager for Windows.</p>
 
+<p align="center">
+  <a href="https://discord.gg/Bk7HBAmCh7"><img src="https://img.shields.io/badge/Discord-Join%20the%20server-5865F2?logo=discord&logoColor=white" alt="Join the Aeolus Discord"></a>
+  <a href="https://github.com/aeolusrbx/Aeolus/releases/latest"><img src="https://img.shields.io/github/v/release/aeolusrbx/Aeolus?label=Download&color=FF861F" alt="Latest release"></a>
+  <a href="https://github.com/aeolusrbx/Aeolus/releases"><img src="https://img.shields.io/github/downloads/aeolusrbx/Aeolus/total?color=292C34" alt="Downloads"></a>
+</p>
+
 Aeolus installs, updates and launches the Roblox Player using Roblox's **official** distribution, and gives you a clean place to manage Fast Flags, launch profiles, plugins and diagnostics.
 
 Aeolus is a bootstrapper, not an executor. It never injects code, never touches Roblox's anti-cheat, and never asks for or stores your Roblox password or account cookies.
@@ -16,11 +22,17 @@ Aeolus is a bootstrapper, not an executor. It never injects code, never touches 
 | **Installations** | Detects Aeolus, official, Bloxstrap and Fishstrap installs. Installs Roblox from `setup.rbxcdn.com` with MD5 verification of every package, resumable downloads, staged extraction and an atomic swap. Includes quick/full verify, repair, reinstall and uninstall. |
 | **Updates** | Checks `clientsettingscdn.roblox.com` for the current version, keeps an update history and can update before each launch. Failed updates leave the working installation in place. |
 | **Launch** | Launch profiles (icon, accent, Fast Flag profile, auto-update, verify, after-launch behavior), launch history and troubleshooting for failed launches. Optionally handles `roblox-player:` links from the website. |
+| **Games** | Detects the game and server you join from Roblox's log: game history, server location, Rejoin the same server, your game in Discord Rich Presence. After a disconnect it offers to rejoin (or rejoins automatically for connection errors), and when Roblox crashes it explains the likely cause and what to try. |
+| **FPS cap** | Sets Roblox's own frame rate limit (presets or a custom number) before each launch, globally or per profile. |
 | **Fast Flags** | A searchable, sortable, filterable editor with multiple profiles, type validation, duplicate detection, allowlist status, import/export, compare, apply-now, and automatic backups with restore. |
 | **Customization** | Dark, light and system themes; accent color; sidebar style; compact navigation; dashboard background; logo presentation; animation level. |
 | **Plugins** | Declarative plugins with explicit permissions, user approval, integrity pinning (a changed plugin is disabled until re-approved), dependencies, configuration and lifecycle hooks. Includes an example plugin. |
 | **Diagnostics** | System information, a structured log viewer (search, severity and date filters, export, clear) and redacted diagnostic reports. |
 | **Windows** | Custom title bar, remembered window size and position, system tray, launch at startup, native notifications, single instance, and a checksum-verified self-updater. |
+
+## Community
+
+Questions, bug reports and mod sharing: **[join the Aeolus Discord](https://discord.gg/Bk7HBAmCh7)**.
 
 ### About Fast Flags
 

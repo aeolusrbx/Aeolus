@@ -14,6 +14,8 @@ pub struct GamesOverview {
     pub current: Option<GameVisit>,
     pub history: Vec<GameVisit>,
     pub tracking: bool,
+    pub disconnect: Option<crate::state::Disconnect>,
+    pub crash: Option<crate::gamewatch::problems::CrashReport>,
 }
 
 #[tauri::command]
@@ -22,6 +24,8 @@ pub fn games_overview(state: State<'_, AppState>) -> GamesOverview {
         current: state.current_game.lock().map(|g| g.clone()).unwrap_or(None),
         history: state.game_history.list(),
         tracking: state.settings().games.track_games,
+        disconnect: state.disconnect.lock().map(|g| g.clone()).unwrap_or(None),
+        crash: state.crash.lock().map(|g| g.clone()).unwrap_or(None),
     }
 }
 
@@ -48,4 +52,23 @@ pub async fn game_rejoin(app: AppHandle, state: State<'_, AppState>, id: String,
     let link = if same_server { v.rejoin_link() } else { v.play_link() };
     state.logger.info("games", format!("{} place {}", if same_server { "Rejoining server in" } else { "Playing" }, v.place_id));
     services::launch(&app, Some(link), None).await
+}
+
+/// Rejoin after a disconnect (closes the disconnected Roblox window first).
+#[tauri::command]
+pub async fn disconnect_rejoin(app: AppHandle) -> AppResult<LaunchRecord> {
+    services::rejoin_after_disconnect(&app, false).await
+}
+
+/// Dismiss the disconnect card (also cancels an automatic rejoin).
+#[tauri::command]
+pub fn disconnect_dismiss(app: AppHandle, state: State<'_, AppState>) {
+    *state.disconnect.lock().unwrap_or_else(|p| p.into_inner()) = None;
+    changed(&app, "games");
+}
+
+#[tauri::command]
+pub fn crash_dismiss(app: AppHandle, state: State<'_, AppState>) {
+    *state.crash.lock().unwrap_or_else(|p| p.into_inner()) = None;
+    changed(&app, "games");
 }

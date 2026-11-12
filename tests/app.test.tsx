@@ -123,6 +123,59 @@ describe("Aeolus UI", () => {
     expect(screen.getByText("Private server")).toBeInTheDocument();
   });
 
+  it("offers to rejoin after a disconnect", async () => {
+    state.disconnect = { id: "d1", at: new Date().toISOString(), game: state.games[0], code: 277, title: "Lost connection to the server", detail: "Your connection dropped.", canRejoin: true, sameServer: true, autoAt: null };
+    render(<App />);
+    expect(await screen.findByText("Disconnected from RIVALS")).toBeInTheDocument();
+    expect(screen.getByText("Error 277")).toBeInTheDocument();
+    fireEvent.click(within(screen.getByRole("alert")).getByRole("button", { name: "Rejoin" }));
+    await waitFor(() => expect(state.calls.some((c) => c.cmd === "disconnect_rejoin")).toBe(true));
+    await waitFor(() => expect(screen.queryByText("Disconnected from RIVALS")).not.toBeInTheDocument());
+  });
+
+  it("shows an automatic rejoin countdown that can be cancelled", async () => {
+    state.disconnect = { id: "d2", at: new Date().toISOString(), game: state.games[0], code: null, title: "Disconnected from the server", detail: "x", canRejoin: true, sameServer: true, autoAt: new Date(Date.now() + 10000).toISOString() };
+    render(<App />);
+    expect(await screen.findByText(/Rejoining automatically in \d+s/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    await waitFor(() => expect(state.calls.some((c) => c.cmd === "disconnect_dismiss")).toBe(true));
+  });
+
+  it("explains a crash and can dismiss it", async () => {
+    state.crash = { id: "c1", at: new Date().toISOString(), exitCode: "0xC0000005", title: "Roblox crashed (memory access error)", explanation: "Roblox tried to use memory it wasn't allowed to.", suggestions: ["Update your graphics driver (NVIDIA, AMD or Intel)."], game: "RIVALS" };
+    render(<App />);
+    expect(await screen.findByText("Roblox crashed (memory access error)")).toBeInTheDocument();
+    expect(screen.getByText("0xC0000005")).toBeInTheDocument();
+    expect(screen.getByText("Update your graphics driver (NVIDIA, AMD or Intel).")).toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole("button", { name: "Dismiss" })[0]);
+    await waitFor(() => expect(screen.queryByText("Roblox crashed (memory access error)")).not.toBeInTheDocument());
+  });
+
+  it("sets an FPS cap from a preset and a custom value", async () => {
+    render(<App />);
+    await screen.findByText("Welcome back");
+    go("Settings");
+    await screen.findByText("Start minimized");
+    fireEvent.click(screen.getAllByRole("button", { name: "Launch" }).find((b) => !nav().contains(b))!);
+    const select = await screen.findByRole("combobox", { name: "FPS cap" });
+    fireEvent.change(select, { target: { value: "144" } });
+    await waitFor(() => expect(state.settings.launch.fpsCap).toBe(144));
+    fireEvent.change(select, { target: { value: "custom" } });
+    const input = await screen.findByRole("textbox", { name: "Custom FPS cap" });
+    fireEvent.change(input, { target: { value: "1000" } });
+    fireEvent.blur(input);
+    await waitFor(() => expect(state.settings.launch.fpsCap).toBe(1000));
+    fireEvent.change(screen.getByRole("combobox", { name: "After a disconnect" }), { target: { value: "auto" } });
+    await waitFor(() => expect(state.settings.games.rejoin).toBe("auto"));
+  });
+
+  it("opens the Discord invite", async () => {
+    render(<App />);
+    await screen.findByText("Welcome back");
+    fireEvent.click(screen.getByRole("button", { name: "Join the Aeolus Discord" }));
+    await waitFor(() => expect(state.calls.some((c) => c.cmd === "open_link" && c.args.which === "discord")).toBe(true));
+  });
+
   it("sets the classic oof preset and resets it", async () => {
     render(<App />);
     await screen.findByText("Welcome back");

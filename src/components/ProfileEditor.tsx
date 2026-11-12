@@ -3,6 +3,7 @@ import { Flame, Gamepad2, Monitor, Rocket, Shield, Sparkles, Star, User, Wind, Z
 import { Modal } from "../stores/dialogs";
 import type { FlagProfileSummary, Profile, ProfileInput, SkyPack } from "../types";
 import { Button, Input, Select, Toggle, Field, cx } from "./ui";
+import { FpsCapInput } from "./FpsCap";
 import { isHexColor } from "../utils/format";
 
 export const PROFILE_ICONS: Record<string, LucideIcon> = {
@@ -108,6 +109,9 @@ export function ProfileEditor({
         </Field>
         <Field label="Use mods" description="Apply your sky, sounds, cursors and fonts from the Mods page. Turn off for plain Roblox.">
           <Toggle checked={p.launch.applyMods ?? true} onChange={(v) => setLaunch("applyMods", v)} />
+        </Field>
+        <Field label="FPS cap" description="Overrides the FPS cap from Settings → Launch for this profile.">
+          <FpsCapInput value={p.launch.fpsCap ?? null} inheritLabel="Use global setting" onChange={(v) => setLaunch("fpsCap", v)} />
         </Field>
         <Field label="Update before launch" description="Installs a pending Roblox update first (Aeolus installation only).">
           <Toggle checked={p.launch.updateBeforeLaunch} onChange={(v) => setLaunch("updateBeforeLaunch", v)} />

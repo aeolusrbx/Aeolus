@@ -5,6 +5,7 @@ pub mod configuration;
 pub mod diagnostics;
 pub mod error;
 pub mod fastflags;
+pub mod fpscap;
 pub mod gamewatch;
 pub mod installation;
 pub mod launcher;
@@ -188,6 +189,7 @@ pub fn run() {
             commands::config::restore_backup,
             commands::config::create_manual_backup,
             commands::extras::diagnostics_system,
+            commands::extras::open_link,
             commands::extras::logs_query,
             commands::extras::logs_clear,
             commands::extras::logs_export,
@@ -212,6 +214,9 @@ pub fn run() {
             commands::games::games_overview,
             commands::games::game_history_clear,
             commands::games::game_rejoin,
+            commands::games::disconnect_rejoin,
+            commands::games::disconnect_dismiss,
+            commands::games::crash_dismiss,
         ])
         .build(tauri::generate_context!())
         .expect("error while building Aeolus")

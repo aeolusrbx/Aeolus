@@ -12,6 +12,7 @@ import { useDialogs } from "../stores/dialogs";
 import { Logo } from "../components/Logo";
 import { ProgressView } from "../components/ProgressDock";
 import { GameRow } from "../components/GameHistory";
+import { CrashCard, DisconnectCard } from "../components/SessionProblems";
 import { Badge, Button, Card, EmptyState, SectionTitle, cx } from "../components/ui";
 import type { ActivityKind } from "../types";
 import { relativeTime } from "../utils/format";
@@ -115,6 +116,8 @@ export default function Home() {
           </Card>
         </motion.div>
 
+        {games.data?.disconnect && <DisconnectCard d={games.data.disconnect} onChanged={() => games.reload()} />}
+        {games.data?.crash && <CrashCard c={games.data.crash} onChanged={() => games.reload()} />}
         {games.data?.current && (
           <Card className="mt-4 overflow-hidden border-success/30">
             <GameRow game={games.data.current} live />

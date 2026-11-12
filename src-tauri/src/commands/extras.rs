@@ -136,3 +136,32 @@ pub fn plugin_uninstall(app: AppHandle, state: State<'_, AppState>, id: String) 
     changed(&app, "plugins");
     Ok(())
 }
+
+pub const DISCORD_INVITE: &str = "https://discord.gg/Bk7HBAmCh7";
+
+/// Open one of Aeolus's own links in the default browser. Only fixed links are
+/// allowed, so the web page can't make Aeolus open arbitrary URLs.
+#[tauri::command]
+pub fn open_link(which: String) -> AppResult<()> {
+    let url = match which.as_str() {
+        "discord" => DISCORD_INVITE,
+        "github" => crate::system::discord::PROJECT_URL,
+        "releases" => "https://github.com/aeolusrbx/Aeolus/releases",
+        _ => return Err(AppError::Validation("Unknown link".into())),
+    };
+    open_url(url)
+}
+
+#[cfg(windows)]
+fn open_url(url: &str) -> AppResult<()> {
+    use std::os::windows::process::CommandExt;
+    const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+    std::process::Command::new("rundll32.exe").args(["url.dll,FileProtocolHandler", url]).creation_flags(CREATE_NO_WINDOW).spawn()?;
+    Ok(())
+}
+
+#[cfg(not(windows))]
+fn open_url(url: &str) -> AppResult<()> {
+    std::process::Command::new("xdg-open").arg(url).spawn()?;
+    Ok(())
+}

@@ -42,7 +42,7 @@ export interface Settings {
     updateBeforeLaunch: boolean;
     keepDownloadCache: boolean;
   };
-  launch: { defaultProfileId: string | null };
+  launch: { defaultProfileId: string | null; fpsCap: number | null };
   fastFlags: {
     defaultProfileId: string | null;
     backupOnChange: boolean;
@@ -61,7 +61,7 @@ export interface Settings {
     pluginEvents: boolean;
   };
   discord: { richPresence: boolean; showProfile: boolean; showGame: boolean };
-  games: { trackGames: boolean; serverLocation: boolean; notifyLocation: boolean };
+  games: { trackGames: boolean; serverLocation: boolean; notifyLocation: boolean; rejoin: RejoinMode };
   mods: { skyPackId: string | null };
   privacy: { logRetentionDays: number; includeLogsInReports: boolean };
   advanced: {
@@ -254,6 +254,7 @@ export interface LaunchPrefs {
   updateBeforeLaunch: boolean;
   verifyBeforeLaunch: boolean;
   applyMods: boolean;
+  fpsCap?: number | null;
   afterLaunch: AfterLaunch;
 }
 
@@ -412,4 +413,27 @@ export interface GamesOverview {
   current: GameVisit | null;
   history: GameVisit[];
   tracking: boolean;
+  disconnect: Disconnect | null;
+  crash: CrashReport | null;
+}
+export type RejoinMode = "off" | "ask" | "auto";
+export interface Disconnect {
+  id: string;
+  at: string;
+  game: GameVisit;
+  code: number | null;
+  title: string;
+  detail: string;
+  canRejoin: boolean;
+  sameServer: boolean;
+  autoAt: string | null;
+}
+export interface CrashReport {
+  id: string;
+  at: string;
+  exitCode: string;
+  title: string;
+  explanation: string;
+  suggestions: string[];
+  game: string | null;
 }

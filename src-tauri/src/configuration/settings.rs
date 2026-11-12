@@ -107,6 +107,8 @@ impl Default for Installation {
 #[serde(default, rename_all = "camelCase")]
 pub struct Launch {
     pub default_profile_id: Option<String>,
+    /// Frame rate cap written to Roblox's settings before launch. None = leave Roblox's own setting alone.
+    pub fps_cap: Option<u32>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -199,11 +201,23 @@ pub struct Games {
     pub server_location: bool,
     /// Show a notification with the server location when joining.
     pub notify_location: bool,
+    /// What to do after a disconnect.
+    pub rejoin: RejoinMode,
 }
 impl Default for Games {
     fn default() -> Self {
-        Self { track_games: true, server_location: true, notify_location: true }
+        Self { track_games: true, server_location: true, notify_location: true, rejoin: RejoinMode::Ask }
     }
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum RejoinMode {
+    Off,
+    /// Show a "Disconnected — Rejoin?" notification and Home card.
+    Ask,
+    /// Rejoin by itself after a short countdown (connection errors only).
+    Auto,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -292,6 +306,9 @@ impl Settings {
         const PAGES: [&str; 9] = ["home", "installations", "launch", "fastflags", "mods", "customization", "plugins", "diagnostics", "settings"];
         if !PAGES.contains(&self.general.default_page.as_str()) {
             return Err(format!("Unknown default page '{}'", self.general.default_page));
+        }
+        if let Some(cap) = self.launch.fps_cap {
+            crate::fpscap::validate(cap).map_err(|e| e.to_string())?;
         }
         if !["plain", "glow", "grid"].contains(&self.appearance.dashboard_background.as_str()) {
             return Err("Unknown dashboard background".into());
