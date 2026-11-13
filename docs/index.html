@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aeolus · Roblox bootstrapper for Windows</title>
+<meta name="description" content="Aeolus is a free, open-source Roblox bootstrapper for Windows: launch profiles, Fast Flags, mods and skies, FPS cap, rejoin after disconnects, crash help and Discord Rich Presence.">
+<meta property="og:title" content="Aeolus · Roblox bootstrapper for Windows">
+<meta property="og:description" content="Launch profiles, Fast Flags, mods and skies, FPS cap, rejoin after disconnects and crash help. Free and open source.">
+<meta property="og:image" content="https://aeolusrbx.github.io/Aeolus/img/og.jpg">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#101114">
+<link rel="icon" href="img/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#101114; --bg2:#17191E; --card:#1E2027; --line:#292C34;
+  --accent:#FF861F; --accent2:#FFAB45; --fg:#F4F4F5; --fg2:#92949E; --fg3:#656873;
+  --ok:#36B37E; --warn:#E9A23B; --bad:#E45B5B; --discord:#5865F2;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--fg);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+img{max-width:100%;height:auto;display:block}
+.wrap{max-width:1140px;margin:0 auto;padding:0 20px}
+
+/* nav */
+nav{position:sticky;top:0;z-index:20;background:rgba(16,17,20,.82);backdrop-filter:blur(12px);border-bottom:1px solid rgba(41,44,52,.7)}
+nav .wrap{display:flex;align-items:center;gap:28px;height:64px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px}
+.brand img{width:30px;height:30px}
+.links{display:flex;gap:22px;margin-left:auto;font-size:14px;color:var(--fg2)}
+.links a:hover{color:var(--fg)}
+.navcta{display:flex;gap:8px}
+@media (max-width:760px){.links{display:none}.navcta{margin-left:auto}.navcta .ghost{display:none}}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;gap:9px;height:44px;padding:0 20px;border-radius:12px;font-weight:600;font-size:15px;transition:transform .15s,background .15s,border-color .15s;white-space:nowrap}
+.btn:hover{transform:translateY(-1px)}
+.btn svg{width:18px;height:18px;flex:none}
+.primary{background:var(--accent);color:#1a0d00;box-shadow:0 8px 30px -8px rgba(255,134,31,.55)}
+.primary:hover{background:var(--accent2)}
+.ghost{border:1px solid var(--line);background:var(--bg2)}
+.ghost:hover{border-color:#3a3e48}
+.discord{background:var(--discord);color:#fff}
+.sm{height:36px;padding:0 14px;font-size:13.5px;border-radius:10px}
+.big{height:54px;padding:0 26px;font-size:16.5px;border-radius:14px}
+
+/* hero */
+.hero{position:relative;padding:84px 0 40px;text-align:center}
+.hero:before{content:"";position:absolute;inset:-120px 0 auto;height:620px;background:radial-gradient(600px 300px at 50% 30%,rgba(255,134,31,.20),transparent 70%);pointer-events:none}
+.hero .logo{width:96px;height:96px;margin:0 auto 22px;filter:drop-shadow(0 10px 30px rgba(255,134,31,.35))}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--fg2);border:1px solid var(--line);background:var(--bg2);border-radius:99px;padding:5px 12px;margin-bottom:20px}
+.eyebrow b{color:var(--accent);font-weight:600}
+h1{font-size:clamp(36px,6vw,64px);line-height:1.05;letter-spacing:-.03em;font-weight:800}
+h1 em{font-style:normal;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lede{max-width:640px;margin:18px auto 0;font-size:18px;color:var(--fg2)}
+.cta{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:32px}
+.meta{margin-top:14px;font-size:13px;color:var(--fg3)}
+.shot{position:relative;margin:56px auto 0;max-width:1060px;border-radius:16px;border:1px solid var(--line);overflow:hidden;box-shadow:0 40px 120px -30px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.02)}
+.shot:after{content:"";position:absolute;inset:0;border-radius:16px;box-shadow:inset 0 1px 0 rgba(255,255,255,.06);pointer-events:none}
+
+/* sections */
+section{padding:84px 0}
+.head{text-align:center;max-width:640px;margin:0 auto 46px}
+.kicker{color:var(--accent);font-weight:600;font-size:13px;letter-spacing:.12em;text-transform:uppercase}
+h2{font-size:clamp(28px,4vw,40px);letter-spacing:-.02em;line-height:1.15;margin-top:8px}
+.head p{color:var(--fg2);margin-top:12px;font-size:16.5px}
+
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+@media (max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:600px){.grid{grid-template-columns:1fr}}
+.card{background:var(--bg2);border:1px solid var(--line);border-radius:16px;padding:24px;transition:border-color .2s,transform .2s}
+.card:hover{border-color:#3a3e48;transform:translateY(-2px)}
+.ico{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:rgba(255,134,31,.12);color:var(--accent);margin-bottom:16px}
+.ico svg{width:21px;height:21px}
+.card h3{font-size:17px;margin-bottom:6px}
+.card p{color:var(--fg2);font-size:14.5px}
+.tag{display:inline-block;margin-left:6px;font-size:11px;font-weight:600;color:var(--accent);background:rgba(255,134,31,.12);border-radius:6px;padding:2px 6px;vertical-align:2px}
+
+/* split feature */
+.split{display:grid;grid-template-columns:1fr 1.25fr;gap:48px;align-items:center}
+.split.rev{grid-template-columns:1.25fr 1fr}
+.split.rev .txt{order:2}
+@media (max-width:860px){.split,.split.rev{grid-template-columns:1fr}.split.rev .txt{order:0}}
+.split h2{text-align:left}
+.split .txt p{color:var(--fg2);margin-top:14px;font-size:16px}
+.checks{list-style:none;margin-top:20px;display:grid;gap:10px}
+.checks li{display:flex;gap:10px;font-size:15px}
+.checks svg{width:18px;height:18px;color:var(--ok);flex:none;margin-top:3px}
+.frame{border-radius:14px;border:1px solid var(--line);overflow:hidden;box-shadow:0 30px 80px -30px rgba(0,0,0,.8)}
+
+/* gallery */
+.tabs{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-bottom:22px}
+.tabs button{font:inherit;font-size:14px;font-weight:500;color:var(--fg2);background:var(--bg2);border:1px solid var(--line);border-radius:10px;height:38px;padding:0 16px;cursor:pointer}
+.tabs button[aria-selected=true]{color:var(--fg);border-color:var(--accent);background:rgba(255,134,31,.10)}
+.gallery{max-width:1000px;margin:0 auto}
+
+/* safety strip */
+.safe{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+@media (max-width:900px){.safe{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:520px){.safe{grid-template-columns:1fr}}
+.safe div{border-left:2px solid var(--accent);padding:4px 0 4px 16px}
+.safe b{display:block;font-size:15.5px}
+.safe span{color:var(--fg2);font-size:14px}
+
+/* faq */
+.faq{max-width:780px;margin:0 auto;display:grid;gap:10px}
+details{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:0 20px}
+summary{cursor:pointer;list-style:none;font-weight:600;padding:18px 28px 18px 0;position:relative}
+summary::-webkit-details-marker{display:none}
+summary:after{content:"+";position:absolute;right:0;top:14px;font-size:22px;color:var(--fg3);transition:transform .2s}
+details[open] summary:after{transform:rotate(45deg)}
+details p{color:var(--fg2);padding-bottom:18px;font-size:15px}
+details code{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:13px}
+
+/* final cta */
+.final{background:radial-gradient(700px 260px at 50% 0%,rgba(255,134,31,.16),transparent 70%),var(--bg2);border:1px solid var(--line);border-radius:24px;padding:56px 24px;text-align:center}
+.final p{color:var(--fg2);margin-top:12px}
+
+footer{border-top:1px solid var(--line);padding:32px 0 44px;color:var(--fg3);font-size:13.5px}
+footer .wrap{display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:center}
+footer .fl{display:flex;gap:18px}
+footer a:hover{color:var(--fg)}
+
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-dl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></symbol>
+  <symbol id="i-code" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol>
+</svg>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="#"><img src="img/logo.png" alt="">Aeolus</a>
+    <div class="links">
+      <a href="#features">Features</a>
+      <a href="#screens">Screenshots</a>
+      <a href="#safety">Safety</a>
+      <a href="#faq">FAQ</a>
+    </div>
+    <div class="navcta">
+      <a class="btn sm ghost" href="https://discord.gg/Bk7HBAmCh7" target="_blank" rel="noopener"><svg><use href="#i-chat"/></svg>Discord</a>
+      <a class="btn sm primary dl" href="https://github.com/aeolusrbx/Aeolus/releases/latest"><svg><use href="#i-dl"/></svg>Download</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <img class="logo" src="img/logo.png" alt="Aeolus logo">
+    <div class="eyebrow"><b class="ver">New</b> FPS cap, rejoin after disconnects and crash help</div>
+    <h1>Roblox, launched<br><em>your way.</em></h1>
+    <p class="lede">Aeolus is a free, open-source Roblox bootstrapper for Windows. Profiles, Fast Flags, mods and skies, an FPS cap, and it gets you back into your server after a disconnect.</p>
+    <div class="cta">
+      <a class="btn big primary dl" href="https://github.com/aeolusrbx/Aeolus/releases/latest"><svg><use href="#i-dl"/></svg><span class="dltext">Download for Windows</span></a>
+      <a class="btn big discord" href="https://discord.gg/Bk7HBAmCh7" target="_blank" rel="noopener"><svg><use href="#i-chat"/></svg>Join the Discord</a>
+    </div>
+    <p class="meta"><span class="vermeta">Windows 10 and 11 · 64-bit</span> · Free · <a href="https://github.com/aeolusrbx/Aeolus" target="_blank" rel="noopener" style="text-decoration:underline">Open source</a></p>
+    <div class="shot"><img src="img/home.webp" width="1600" height="1031" alt="The Aeolus home screen showing installation status, quick actions, recent activity and recent games"></div>
+  </div>
+</header>
+
+<section id="features">
+  <div class="wrap">
+    <div class="head">
+      <div class="kicker">Features</div>
+      <h2>Everything a bootstrapper should do, and a few things others don't</h2>
+    </div>
+    <div class="grid">
+      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg></div><h3>Rejoin after a disconnect<span class="tag">New</span></h3><p>Lost connection? Aeolus explains the error and puts you back in the same server with one click, or automatically after a 10-second countdown.</p></div>
+      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div><h3>FPS cap<span class="tag">New</span></h3><p>Pick 60, 144, 240 or type your own number. Set it once, or give each profile its own cap.</p></div>
+      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg></div><h3>Crash help<span class="tag">New</span></h3><p>When Roblox crashes, Aeolus tells you the likely cause in plain English (drivers, memory, overlays) and what to try.</p></div>
+      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.3-2 5-2 5s3.7-.5 5-2c.7-.8.7-2.1-.1-2.9a2.2 2.2 0 0 0-2.9-.1Z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.9A12.9 12.9 0 0 1 22 2c0 2.7-.8 7.5-6 11a22.4 22.4 0 0 1-4 2Z"/></svg></div><h3>Launch profiles</h3><p>Different setups for different games. Each profile has its own Fast Flags, sky, mods, FPS cap and launch behavior.</p></div>
+      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.7-9h1.8a4.5 4.5 0 1 1 0 9Z"/></svg></div><h3>Mods and custom skies</h3><p>Change Roblox's built-in sky, death sound, cursor and fonts. Originals are backed up and restored exactly.</p></div>
+      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22v-7"/></svg></div><h3>Fast Flags editor</h3><p>Search, validate and organize flags into profiles. Shows which flags Roblox still allows, with backups and restore.</p></div>
+      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="3"/><path d="M6 12h4"/><path d="M8 10v4"/><path d="M15 13h.01"/><path d="M18 11h.01"/></svg></div><h3>Game history and Discord status</h3><p>See the games you played, where the server was, and rejoin them. Your Discord status shows the game you're in.</p></div>
+      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg></div><h3>Installs and updates Roblox</h3><p>Downloads straight from Roblox's own servers, checks every file, and can verify and repair your install.</p></div>
+      <div class="card"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a10 10 0 1 1 0-20 10 10 0 0 1 0 20Z"/><path d="M12 2a15 15 0 0 1 0 20"/><path d="M12 2a15 15 0 0 0 0 20"/><path d="M2 12h20"/></svg></div><h3>Clean and fast</h3><p>A modern interface with themes and accent colors, a tray icon and automatic updates for Aeolus itself.</p></div>
+    </div>
+  </div>
+</section>
+
+<section style="padding-top:20px">
+  <div class="wrap">
+    <div class="split">
+      <div class="txt">
+        <div class="kicker">Disconnects</div>
+        <h2>Kicked by a bad connection? You're back in seconds.</h2>
+        <p>Aeolus notices when Roblox loses the connection, tells you what the error means, and rejoins the exact same server, so you're back with your friends instead of a random new server.</p>
+        <ul class="checks">
+          <li><svg><use href="#i-check"/></svg>Ask first, or rejoin automatically after 10 seconds</li>
+          <li><svg><use href="#i-check"/></svg>Never auto-rejoins after a kick</li>
+          <li><svg><use href="#i-check"/></svg>Loop protection: at most 3 automatic rejoins in 10 minutes</li>
+        </ul>
+      </div>
+      <div class="frame"><img src="img/rejoin.webp" width="1600" height="1031" loading="lazy" alt="Aeolus showing a 'Disconnected from RIVALS, error 277' card with a countdown and a Rejoin now button"></div>
+    </div>
+  </div>
+</section>
+
+<section style="padding-top:20px">
+  <div class="wrap">
+    <div class="split rev">
+      <div class="txt">
+        <div class="kicker">Mods</div>
+        <h2>Your sky. Your oof. Your cursor.</h2>
+        <p>Swap Roblox's built-in sky, death sound, cursor and fonts with your own files or the built-in presets. Aeolus keeps the originals and puts them back whenever you want, and file checks never undo your mods.</p>
+        <ul class="checks">
+          <li><svg><use href="#i-check"/></svg>Sky packs from a folder or .zip</li>
+          <li><svg><use href="#i-check"/></svg>Classic oof and cursor presets included</li>
+          <li><svg><use href="#i-check"/></svg>Turn mods off per profile</li>
+        </ul>
+      </div>
+      <div class="frame"><img src="img/mods.webp" width="1600" height="1031" loading="lazy" alt="The Aeolus Mods page with sky choices and sound replacements"></div>
+    </div>
+  </div>
+</section>
+
+<section id="screens">
+  <div class="wrap">
+    <div class="head">
+      <div class="kicker">Screenshots</div>
+      <h2>Take a look around</h2>
+    </div>
+    <div class="tabs" role="tablist">
+      <button role="tab" aria-selected="true" data-img="home">Home</button>
+      <button role="tab" aria-selected="false" data-img="launch">Launch</button>
+      <button role="tab" aria-selected="false" data-img="fastflags">Fast Flags</button>
+      <button role="tab" aria-selected="false" data-img="mods">Mods</button>
+      <button role="tab" aria-selected="false" data-img="installations">Installations</button>
+      <button role="tab" aria-selected="false" data-img="settings">Settings</button>
+    </div>
+    <div class="gallery frame"><img id="gimg" src="img/home.webp" width="1600" height="1031" loading="lazy" alt="Aeolus screenshot: Home"></div>
+  </div>
+</section>
+
+<section id="safety">
+  <div class="wrap">
+    <div class="head">
+      <div class="kicker">Safety</div>
+      <h2>A bootstrapper, not an exploit</h2>
+      <p>Aeolus only does what Roblox allows a launcher to do.</p>
+    </div>
+    <div class="safe">
+      <div><b>No injection</b><span>Never touches Roblox's code or its anti-cheat.</span></div>
+      <div><b>No passwords</b><span>Never asks for or stores your Roblox login or cookies.</span></div>
+      <div><b>Official downloads</b><span>Roblox comes straight from Roblox's servers, checked file by file.</span></div>
+      <div><b>Open source</b><span>Every line is public on GitHub for anyone to read.</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap">
+    <div class="head">
+      <div class="kicker">FAQ</div>
+      <h2>Questions</h2>
+    </div>
+    <div class="faq">
+      <details><summary>Can I get banned for using Aeolus?</summary><p>Aeolus doesn't inject anything or change how games play. It installs and launches Roblox like the official launcher, and only uses Fast Flags that Roblox still allows. Mods only replace Roblox's built-in sounds, cursors, fonts and sky textures on your own PC.</p></details>
+      <details><summary>Windows says "Windows protected your PC". Is that normal?</summary><p>Yes. New apps without a paid code-signing certificate show this warning until enough people have downloaded them. Click <b>More info → Run anyway</b>. If you want to double-check, scan the installer on VirusTotal or read the source on GitHub.</p></details>
+      <details><summary>What do I need to run it?</summary><p>A 64-bit PC with Windows 10 (version 1803 or newer) or Windows 11. Aeolus uses Microsoft's WebView2, which most PCs already have. If yours doesn't, the installer sets it up for you.</p></details>
+      <details><summary>Does it work with my existing Roblox install?</summary><p>Yes. Aeolus detects Roblox installs from the official launcher, Bloxstrap and Fishstrap, and can install its own copy straight from Roblox's servers.</p></details>
+      <details><summary>Why doesn't my sky or sound change in some games?</summary><p>Mods replace Roblox's <i>built-in</i> versions. Games that use their own custom sky, sounds or cursor keep those.</p></details>
+      <details><summary>How do I update Aeolus?</summary><p>Aeolus checks for new versions by itself. You can also open <b>Settings</b> and click <b>Check now</b>.</p></details>
+      <details><summary>Where can I get help or share mods?</summary><p>Join the <a href="https://discord.gg/Bk7HBAmCh7" target="_blank" rel="noopener" style="color:var(--accent)">Aeolus Discord</a> for help, bug reports, suggestions and the mods forum.</p></details>
+    </div>
+  </div>
+</section>
+
+<section style="padding-top:20px">
+  <div class="wrap">
+    <div class="final">
+      <h2>Ready to try Aeolus?</h2>
+      <p>Free, open source, and takes under a minute to set up.</p>
+      <div class="cta">
+        <a class="btn big primary dl" href="https://github.com/aeolusrbx/Aeolus/releases/latest"><svg><use href="#i-dl"/></svg><span class="dltext">Download for Windows</span></a>
+        <a class="btn big ghost" href="https://github.com/aeolusrbx/Aeolus" target="_blank" rel="noopener"><svg><use href="#i-code"/></svg>View on GitHub</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div>© Aeolus. Not affiliated with or endorsed by Roblox Corporation.</div>
+    <div class="fl">
+      <a href="https://github.com/aeolusrbx/Aeolus" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://discord.gg/Bk7HBAmCh7" target="_blank" rel="noopener">Discord</a>
+      <a href="https://github.com/aeolusrbx/Aeolus/releases" target="_blank" rel="noopener">All releases</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+// Screenshot tabs
+document.querySelectorAll('.tabs button').forEach(function (b) {
+  b.addEventListener('click', function () {
+    document.querySelectorAll('.tabs button').forEach(function (x) { x.setAttribute('aria-selected', x === b ? 'true' : 'false'); });
+    var img = document.getElementById('gimg');
+    img.src = 'img/' + b.dataset.img + '.webp';
+    img.alt = 'Aeolus screenshot: ' + b.textContent;
+  });
+});
+// Point the download buttons straight at the newest installer.
+fetch('https://api.github.com/repos/aeolusrbx/Aeolus/releases/latest')
+  .then(function (r) { return r.ok ? r.json() : null; })
+  .then(function (rel) {
+    if (!rel) return;
+    var exe = (rel.assets || []).find(function (a) { return /setup\.exe$/i.test(a.name); });
+    var v = (rel.tag_name || '').replace(/^v/, '');
+    if (exe) document.querySelectorAll('a.dl').forEach(function (a) { a.href = exe.browser_download_url; });
+    if (v) {
+      document.querySelectorAll('.dltext').forEach(function (s) { s.textContent = 'Download v' + v; });
+      var vm = document.querySelector('.vermeta'); if (vm) vm.textContent = 'Version ' + v + ' · Windows 10 and 11 · 64-bit';
+      var ev = document.querySelector('.ver'); if (ev) ev.textContent = 'v' + v;
+    }
+  })
+  .catch(function () {});
+</script>
+</body>
+</html>

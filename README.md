@@ -3,6 +3,8 @@
 <h1 align="center">Aeolus</h1>
 <p align="center">A Roblox bootstrapper and client manager for Windows.</p>
 
+<p align="center"><a href="https://aeolusrbx.github.io/Aeolus/"><b>aeolusrbx.github.io/Aeolus</b></a></p>
+
 <p align="center">
   <a href="https://discord.gg/Bk7HBAmCh7"><img src="https://img.shields.io/badge/Discord-Join%20the%20server-5865F2?logo=discord&logoColor=white" alt="Join the Aeolus Discord"></a>
   <a href="https://github.com/aeolusrbx/Aeolus/releases/latest"><img src="https://img.shields.io/github/v/release/aeolusrbx/Aeolus?label=Download&color=FF861F" alt="Latest release"></a>
