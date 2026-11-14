@@ -91,7 +91,7 @@ export default function Installations() {
   };
 
   return (
-    <div className="mx-auto max-w-5xl px-10 py-9">
+    <div className="mx-auto max-w-5xl px-7 py-6">
       <PageHeader
         title="Installations"
         description="Install, update and maintain the Roblox Player using Roblox's official distribution."

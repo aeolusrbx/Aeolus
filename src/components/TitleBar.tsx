@@ -23,13 +23,13 @@ export function TitleBar({ title }: { title: string }) {
   const { settings } = useApp();
   const iconOnly = settings?.appearance.logoPresentation === "icon";
   const w = () => getCurrentWindow();
-  const btn = "flex h-full w-12 items-center justify-center text-fg-2 transition-colors hover:bg-fg/[0.07] hover:text-fg";
+  const btn = "flex h-full w-11 items-center justify-center text-fg-2 transition-colors hover:bg-fg/[0.07] hover:text-fg";
 
   return (
-    <div className="flex h-11 shrink-0 select-none items-center bg-bg-2" data-tauri-drag-region onDoubleClick={() => inTauri() && w().toggleMaximize()}>
+    <div className="flex h-9 shrink-0 select-none items-center bg-bg-2" data-tauri-drag-region onDoubleClick={() => inTauri() && w().toggleMaximize()}>
       <div className="pointer-events-none flex items-center gap-2.5 pl-4" data-tauri-drag-region>
-        <Logo size={18} />
-        {!iconOnly && <span className="text-[12.5px] text-fg">Aeolus</span>}
+        <Logo size={16} />
+        {!iconOnly && <span className="text-xs text-fg-2">Aeolus</span>}
         <span className="sr-only">{title}</span>
       </div>
       <div className="flex-1" data-tauri-drag-region />

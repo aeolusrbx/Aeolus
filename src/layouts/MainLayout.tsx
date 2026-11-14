@@ -14,7 +14,7 @@ export function MainLayout({ children }: { children: ReactNode }) {
       <TitleBar title={label ? `Aeolus — ${label}` : "Aeolus"} />
       <div className="flex min-h-0 flex-1">
         <Sidebar />
-        <main className="min-w-0 flex-1 overflow-y-auto rounded-tl-lg border-l border-t border-line bg-bg">{children}</main>
+        <main className="min-w-0 flex-1 overflow-y-auto bg-bg">{children}</main>
       </div>
       <ProgressDock />
     </div>

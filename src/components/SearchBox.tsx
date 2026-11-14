@@ -93,7 +93,7 @@ export function SearchBox({ collapsed }: { collapsed: boolean }) {
 
   const field = (
     <div className="relative">
-      <Search size={14} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-fg-3" />
+
       <input
         ref={input}
         value={query}
@@ -107,14 +107,15 @@ export function SearchBox({ collapsed }: { collapsed: boolean }) {
         placeholder="Search"
         aria-label="Search Aeolus"
         spellCheck={false}
-        className="h-8 w-full rounded-md border border-line border-b-fg-3/50 bg-control pl-8 pr-12 text-[13px] text-fg placeholder:text-fg-3 transition-colors hover:bg-surface-hover focus:border-b-accent focus:bg-bg focus:outline-none focus-visible:outline-none"
+        title="Search (Ctrl+K)"
+        className="h-8 w-full rounded-md border border-line border-b-fg-3/50 bg-control pl-3 pr-9 text-[13px] text-fg placeholder:text-fg-3 transition-colors hover:bg-surface-hover focus:border-b-accent focus:bg-bg focus:outline-none focus-visible:outline-none"
       />
       {query ? (
         <button aria-label="Clear search" onMouseDown={(e) => e.preventDefault()} onClick={() => setQuery("")} className="absolute right-1.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded text-fg-3 hover:text-fg">
           <X size={13} />
         </button>
       ) : (
-        <kbd className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 rounded border border-line px-1 font-sans text-[10px] text-fg-3">Ctrl K</kbd>
+        <Search size={14} className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-fg-2" />
       )}
     </div>
   );

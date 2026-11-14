@@ -5,14 +5,14 @@
    a slightly lighter content layer, and calm setting cards on top. */
 :root,
 [data-theme="dark"] {
-  --bg: #131418;          /* content layer */
-  --bg-2: #0f1013;        /* window chrome: title bar, navigation */
-  --surface: #1a1c21;     /* cards and setting rows */
-  --surface-hover: #202228;
-  --control: #1f2127;     /* inputs, selects, secondary buttons */
-  --border: #24262d;
+  --bg: #17181c;          /* window */
+  --bg-2: #17181c;        /* title bar + navigation: same flat background */
+  --surface: #212227;     /* cards and setting rows, set apart by shade */
+  --surface-hover: #26272d;
+  --control: #2a2b31;     /* inputs, selects, secondary buttons */
+  --border: #2a2b31;
   --text: #f4f4f5;
-  --text-2: #9a9ca6;
+  --text-2: #a3a5ad;
   --text-3: #686b76;
   --success: #36b37e;
   --warning: #e9a23b;
@@ -25,8 +25,8 @@
 }
 
 [data-theme="light"] {
-  --bg: #f7f7f9;
-  --bg-2: #eeeef1;
+  --bg: #f3f3f5;
+  --bg-2: #f3f3f5;
   --surface: #ffffff;
   --surface-hover: #f6f6f8;
   --control: #ffffff;

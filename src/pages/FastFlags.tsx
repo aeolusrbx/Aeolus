@@ -102,7 +102,7 @@ export default function FastFlags() {
   );
 
   return (
-    <div className="mx-auto flex h-full max-w-6xl flex-col px-10 py-9">
+    <div className="mx-auto flex h-full max-w-6xl flex-col px-7 py-6">
       <PageHeader
         title="Fast Flags"
         description="Manage ClientAppSettings overrides in separate profiles. Changes are validated and backed up automatically."

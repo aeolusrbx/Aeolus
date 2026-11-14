@@ -2,6 +2,16 @@
 
 All notable changes to Aeolus are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/) and the project uses semantic versioning.
 
+## [0.3.1] — 2026-11-14
+
+### Changed
+- **Even more minimal**: one flat background, setting cards set apart by shade instead of borders, smaller titles and tighter spacing.
+- Settings sections are now tabs at the top of the Settings page.
+- The search box has its icon on the right and a cleaner look.
+
+### Fixed
+- "Show profile name" showed `\u201c` instead of quote marks.
+
 ## [0.3.0] — 2026-11-14
 
 ### Changed

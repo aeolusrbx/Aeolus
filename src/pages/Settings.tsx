@@ -58,24 +58,24 @@ export default function Settings() {
   );
 
   return (
-    <div className="mx-auto flex max-w-5xl gap-10 px-10 py-9">
-      <nav className="sticky top-0 w-44 shrink-0 self-start" aria-label="Settings sections">
-        <h1 className="mb-5 text-[28px] font-semibold leading-tight tracking-tight text-fg">Settings</h1>
+    <div className="mx-auto max-w-4xl px-7 py-6">
+      <h1 className="text-[22px] font-semibold leading-tight text-fg">Settings</h1>
+      <p className="mt-0.5 text-[13px] text-fg-2">Choose how Aeolus installs, launches and behaves.</p>
+      <nav className="mb-6 mt-4 flex flex-wrap gap-1 border-b border-line" aria-label="Settings sections">
         {SECTIONS.map((x) => (
           <button
             key={x}
             onClick={() => setSection(x)}
             aria-current={section === x ? "page" : undefined}
-            className={cx("relative mb-0.5 flex h-8 w-full items-center rounded-md px-3 text-left text-[13.5px] transition-colors", section === x ? "bg-fg/[0.07] text-fg" : "text-fg-2 hover:bg-fg/[0.04] hover:text-fg")}
+            className={cx("relative -mb-px h-9 px-3 text-[13px] transition-colors", section === x ? "text-fg" : "text-fg-2 hover:text-fg")}
           >
-            {section === x && <span className="absolute left-0 top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-full bg-accent" />}
             {x}
+            {section === x && <span className="absolute inset-x-3 bottom-0 h-[2px] rounded-full bg-accent" />}
           </button>
         ))}
       </nav>
 
-      <div className="min-w-0 flex-1 pt-[52px]">
-        <h2 className="mb-5 text-xl font-semibold text-fg">{section}</h2>
+      <div className="min-w-0">
 
         {section === "General" && (
           <>
@@ -170,7 +170,7 @@ export default function Settings() {
                 description={
                   integration.data && !integration.data.discordAvailable
                     ? "Not available in this build of Aeolus."
-                    : "Shows \u201cRunning Roblox with Aeolus\u201d with the Aeolus logo on your Discord profile while Roblox is open. Aeolus must stay running (it can sit in the tray)."
+                    : "Shows “Running Roblox with Aeolus” with the Aeolus logo on your Discord profile while Roblox is open. Aeolus must stay running (it can sit in the tray)."
                 }
               >
                 <Toggle label="Discord Rich Presence" checked={s.discord.richPresence} disabled={integration.data ? !integration.data.discordAvailable : false} onChange={(v) => set("discord", { richPresence: v })} />
@@ -178,7 +178,7 @@ export default function Settings() {
               <Field label="Show the game you're playing" description="Shows the game's name, icon and creator, plus a button to its page.">
                 <Toggle label="Show the game you're playing" checked={s.discord.showGame} disabled={!s.discord.richPresence} onChange={(v) => set("discord", { showGame: v })} />
               </Field>
-              <Field label="Show profile name" description="Adds \u201cProfile: <name>\u201d under the status.">
+              <Field label="Show profile name" description="Adds “Profile: <name>” under the status.">
                 <Toggle label="Show profile name" checked={s.discord.showProfile} disabled={!s.discord.richPresence} onChange={(v) => set("discord", { showProfile: v })} />
               </Field>
             </Group>
@@ -189,7 +189,7 @@ export default function Settings() {
               <Field label="Show server location" description="Looks up where the Roblox server is (city, region, country) using ipinfo.io. Only the Roblox server's address is sent, never yours.">
                 <Toggle label="Show server location" checked={s.games.serverLocation} disabled={!s.games.trackGames} onChange={(v) => set("games", { serverLocation: v })} />
               </Field>
-              <Field label="Notify me where the server is" description="A notification like \u201cServer location: Ashburn, Virginia, US\u201d when you join.">
+              <Field label="Notify me where the server is" description="A notification like “Server location: Ashburn, Virginia, US” when you join.">
                 <Toggle label="Notify me where the server is" checked={s.games.notifyLocation} disabled={!s.games.trackGames || !s.games.serverLocation} onChange={(v) => set("games", { notifyLocation: v })} />
               </Field>
             </Group>

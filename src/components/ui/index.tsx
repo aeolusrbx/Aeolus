@@ -100,7 +100,7 @@ export function Select({ className, children, ...rest }: SelectHTMLAttributes<HT
 
 export function Card({ className, children, ...rest }: { className?: string; children: ReactNode } & React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cx("rounded-lg border border-line bg-surface", className)} {...rest}>
+    <div className={cx("rounded-md border border-transparent bg-surface", className)} {...rest}>
       {children}
     </div>
   );
@@ -145,13 +145,13 @@ export function Field({ label, description, children, className }: { label: Reac
       data-setting={typeof label === "string" ? label : undefined}
       className={cx(
         "flex items-center justify-between gap-6",
-        card ? "min-h-[64px] rounded-lg border border-line bg-surface px-4 py-3 transition-colors hover:bg-surface-hover" : "py-3",
+        card ? "min-h-[54px] rounded-md bg-surface px-4 py-2.5 transition-colors hover:bg-surface-hover" : "py-3",
         className,
       )}
     >
       <div className="min-w-0">
-        <div className="text-[13.5px] text-fg">{label}</div>
-        {description && <div className="mt-0.5 text-xs leading-relaxed text-fg-2">{description}</div>}
+        <div className="text-[13px] text-fg">{label}</div>
+        {description && <div className="mt-0.5 text-[11.5px] leading-snug text-fg-2">{description}</div>}
       </div>
       <div className="flex shrink-0 items-center gap-2">{children}</div>
     </div>
@@ -161,10 +161,10 @@ export function Field({ label, description, children, className }: { label: Reac
 /** A titled list of setting cards. */
 export function SettingGroup({ title, description, children }: { title: string; description?: ReactNode; children: ReactNode }) {
   return (
-    <section className="mb-7">
-      <h2 className="mb-1 text-[15px] font-semibold text-fg">{title}</h2>
-      {description && <p className="mb-2 text-xs text-fg-2">{description}</p>}
-      <div className={cx("flex flex-col gap-1", !description && "mt-2")}>
+    <section className="mb-6">
+      <h2 className="text-[16px] font-semibold text-fg">{title}</h2>
+      {description && <p className="mt-0.5 text-xs text-fg-2">{description}</p>}
+      <div className="mt-2 flex flex-col gap-1.5">
         <InGroup.Provider value={true}>{children}</InGroup.Provider>
       </div>
     </section>
@@ -174,7 +174,7 @@ export function SettingGroup({ title, description, children }: { title: string; 
 export function SectionTitle({ children, action }: { children: ReactNode; action?: ReactNode }) {
   return (
     <div className="mb-2.5 flex min-h-7 items-center justify-between">
-      <h2 className="text-[15px] font-semibold text-fg">{children}</h2>
+      <h2 className="text-[16px] font-semibold text-fg">{children}</h2>
       {action}
     </div>
   );
@@ -193,10 +193,10 @@ export function EmptyState({ icon, title, description, action }: { icon?: ReactN
 
 export function PageHeader({ title, description, actions }: { title: string; description?: string; actions?: ReactNode }) {
   return (
-    <div className="mb-7 flex items-end justify-between gap-4">
+    <div className="mb-5 flex items-end justify-between gap-4">
       <div className="min-w-0">
-        <h1 className="text-[28px] font-semibold leading-tight tracking-tight text-fg">{title}</h1>
-        {description && <p className="mt-1.5 max-w-2xl text-[13.5px] text-fg-2">{description}</p>}
+        <h1 className="text-[22px] font-semibold leading-tight text-fg">{title}</h1>
+        {description && <p className="mt-0.5 max-w-2xl text-[13px] text-fg-2">{description}</p>}
       </div>
       {actions && <div className="flex items-center gap-2">{actions}</div>}
     </div>

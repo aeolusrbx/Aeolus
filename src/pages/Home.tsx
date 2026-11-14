@@ -70,11 +70,11 @@ export default function Home() {
   return (
     <div className={cx("relative min-h-full", bg === "glow" && "bg-glow")}>
       {bg === "grid" && <div className="bg-grid pointer-events-none absolute inset-x-0 top-0 h-80" />}
-      <div className="relative mx-auto max-w-5xl px-10 py-9">
+      <div className="relative mx-auto max-w-5xl px-7 py-6">
         <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }} className="flex items-end justify-between gap-6">
           <div className="min-w-0">
-            <h1 className="text-[28px] font-semibold leading-tight tracking-tight text-fg">Welcome back</h1>
-            <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13.5px] text-fg-2">
+            <h1 className="text-[22px] font-semibold leading-tight text-fg">Welcome back</h1>
+            <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-fg-2">
               <span className={cx("inline-flex items-center gap-1.5", ready && !o?.update.updateAvailable && !busy && "text-success")}>
                 {ready && !o?.update.updateAvailable && !busy ? <CheckCircle2 size={14} /> : <ActivityIcon size={14} />}
                 {statusText}
@@ -121,7 +121,7 @@ export default function Home() {
           </Card>
         )}
 
-        <Card className="mt-7 grid grid-cols-4 divide-x divide-line">
+        <Card className="mt-5 grid grid-cols-4 divide-x divide-bg">
           <Stat label="Installation" value={installed ? "Installed" : external ? "External" : "Not installed"} sub={installed ? `${installed.fileCount.toLocaleString()} files` : external ? "Using another installation" : "Install from Aeolus"} tone={ready ? undefined : "warn"} />
           <Stat label="Client version" value={installed?.version ?? o?.update.installed ?? "—"} sub={installed?.versionGuid} />
           <Stat
@@ -141,10 +141,10 @@ export default function Home() {
           <Button size="sm" icon={<ArchiveRestore size={13} />} onClick={() => openRestore()}>Restore config</Button>
         </div>
 
-        <div className="mt-9 grid grid-cols-2 gap-6">
+        <div className="mt-7 grid grid-cols-2 gap-5">
           <div className="min-w-0">
             <SectionTitle action={others.length > 0 ? <Button size="sm" variant="ghost" onClick={() => navigate("launch")}>See all</Button> : undefined}>Recent games</SectionTitle>
-            <Card className="divide-y divide-line">
+            <Card className="divide-y divide-bg">
               {others.length === 0 && <EmptyState icon={<Rocket size={20} />} title="No games yet" description="Games you join after launching from Aeolus show up here, with a Rejoin button." />}
               {others.slice(0, 4).map((g) => <GameRow key={g.id} game={g} compact />)}
             </Card>

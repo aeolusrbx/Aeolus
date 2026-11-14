@@ -105,7 +105,7 @@ export default function Mods() {
   const anyActive = mods.data?.some((s) => s.choice) ?? false;
 
   return (
-    <div className="mx-auto max-w-4xl px-10 py-9">
+    <div className="mx-auto max-w-4xl px-7 py-6">
       <PageHeader
         title="Mods"
         description="Change Roblox's built-in sky, sounds, cursors and fonts. Originals are saved and can be restored any time."

@@ -34,14 +34,14 @@ export function Sidebar() {
         title={collapsed ? n.label : undefined}
         aria-current={active ? "page" : undefined}
         className={cx(
-          "relative flex items-center gap-3 rounded-md px-3 text-[13.5px] transition-colors",
+          "relative flex items-center gap-3 rounded-md border px-3 text-[13px] transition-colors",
           compact ? "h-8" : "h-9",
-          active ? "bg-fg/[0.07] text-fg" : "text-fg-2 hover:bg-fg/[0.04] hover:text-fg",
+          active ? "border-fg/[0.08] bg-fg/[0.06] text-fg" : "border-transparent text-fg hover:bg-fg/[0.04]",
           collapsed && "justify-center px-0",
         )}
       >
         {active && <motion.span layoutId="nav-indicator" transition={{ duration: 0.18 }} className="absolute left-0 top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-full bg-accent" />}
-        <Icon size={17} strokeWidth={1.75} className={cx("shrink-0", active ? "text-fg" : "text-fg-2")} />
+        <Icon size={16} strokeWidth={1.75} className="shrink-0 text-fg" />
         {!collapsed && <span className="truncate">{n.label}</span>}
       </button>
     );
@@ -49,15 +49,15 @@ export function Sidebar() {
 
   return (
     <motion.aside
-      animate={{ width: collapsed ? 60 : 248 }}
+      animate={{ width: collapsed ? 60 : 228 }}
       transition={{ duration: 0.18, ease: "easeOut" }}
       className={cx("flex shrink-0 flex-col", subtle ? "bg-bg" : "bg-bg-2")}
     >
-      <div className={cx("px-3 pb-3 pt-2", collapsed && "px-2")}>
+      <div className={cx("px-2.5 pb-2.5 pt-1", collapsed && "px-2")}>
         <SearchBox collapsed={collapsed} />
       </div>
 
-      <nav className={cx("flex flex-1 flex-col gap-0.5 overflow-y-auto px-3", collapsed && "px-2")} aria-label="Main">
+      <nav className={cx("flex flex-1 flex-col gap-0.5 overflow-y-auto px-2.5", collapsed && "px-2")} aria-label="Main">
         {NAV.filter((n) => n.id !== "settings").map(item)}
         <div className="flex-1" />
         {item(NAV.find((n) => n.id === "settings")!)}
