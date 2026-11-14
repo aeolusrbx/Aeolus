@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { open as openDialog, save as saveDialog } from "@tauri-apps/plugin-dialog";
 import { Copy, Download, ExternalLink, MessageCircle, RefreshCw, RotateCcw, Trash2, Upload } from "lucide-react";
 import { FpsCapInput } from "../components/FpsCap";
@@ -10,7 +10,7 @@ import { useToast } from "../stores/toasts";
 import { useRestoreDialog } from "../components/RestoreDialog";
 import { NAV } from "../components/Sidebar";
 import { Logo } from "../components/Logo";
-import { Button, Card, Field, Input, PageHeader, Select, Toggle, cx } from "../components/ui";
+import { Button, Card, Field, Input, Select, Toggle, cx, SettingGroup } from "../components/ui";
 import type { Settings as S } from "../types";
 
 const SECTIONS = ["General", "Installation", "Launch", "Fast Flags", "Plugins", "Privacy", "Advanced", "About"] as const;
@@ -29,18 +29,14 @@ function NumberSetting({ value, min, max, onCommit, suffix }: { value: number; m
   );
 }
 
-function Group({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <div className="mb-6">
-      <h2 className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-fg-3">{title}</h2>
-      <Card className="divide-y divide-line px-4">{children}</Card>
-    </div>
-  );
-}
+const Group = SettingGroup;
 
 export default function Settings() {
-  const { settings, updateSettings, info, navigate } = useApp();
+  const { settings, updateSettings, info, navigate, target } = useApp();
   const [section, setSection] = useState<Section>("General");
+  useEffect(() => {
+    if (target?.section && (SECTIONS as readonly string[]).includes(target.section)) setSection(target.section as Section);
+  }, [target]);
   const profiles = useResource(api.profilesGet, ["profiles"]);
   const ffProfiles = useResource(api.ffProfiles, ["fastflags"]);
   const integration = useResource(api.systemIntegration, ["settings"]);
@@ -62,18 +58,24 @@ export default function Settings() {
   );
 
   return (
-    <div className="mx-auto flex max-w-5xl gap-8 px-8 py-8">
-      <nav className="sticky top-0 w-40 shrink-0 self-start" aria-label="Settings sections">
-        <h1 className="mb-4 text-xl font-semibold tracking-tight text-fg">Settings</h1>
+    <div className="mx-auto flex max-w-5xl gap-10 px-10 py-9">
+      <nav className="sticky top-0 w-44 shrink-0 self-start" aria-label="Settings sections">
+        <h1 className="mb-5 text-[28px] font-semibold leading-tight tracking-tight text-fg">Settings</h1>
         {SECTIONS.map((x) => (
-          <button key={x} onClick={() => setSection(x)} className={cx("mb-0.5 block w-full rounded-lg px-3 py-1.5 text-left text-[13px] transition-colors", section === x ? "bg-surface font-medium text-fg ring-1 ring-line" : "text-fg-2 hover:text-fg")}>
+          <button
+            key={x}
+            onClick={() => setSection(x)}
+            aria-current={section === x ? "page" : undefined}
+            className={cx("relative mb-0.5 flex h-8 w-full items-center rounded-md px-3 text-left text-[13.5px] transition-colors", section === x ? "bg-fg/[0.07] text-fg" : "text-fg-2 hover:bg-fg/[0.04] hover:text-fg")}
+          >
+            {section === x && <span className="absolute left-0 top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-full bg-accent" />}
             {x}
           </button>
         ))}
       </nav>
 
-      <div className="min-w-0 flex-1">
-        <PageHeader title={section} />
+      <div className="min-w-0 flex-1 pt-[52px]">
+        <h2 className="mb-5 text-xl font-semibold text-fg">{section}</h2>
 
         {section === "General" && (
           <>

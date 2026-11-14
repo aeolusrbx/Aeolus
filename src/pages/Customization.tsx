@@ -18,7 +18,7 @@ export default function Customization() {
     updateSettings((cur) => ({ ...cur, [section]: { ...(cur[section] as object), ...patch } }));
 
   return (
-    <div className="mx-auto max-w-4xl px-8 py-8">
+    <div className="mx-auto max-w-4xl px-10 py-9">
       <PageHeader title="Customization" description="Make Aeolus look and behave the way you like. Changes apply instantly and are saved." />
 
       <SectionTitle>Theme</SectionTitle>

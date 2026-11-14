@@ -1,4 +1,4 @@
-import { forwardRef, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from "react";
+import { createContext, forwardRef, useContext, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from "react";
 import { Loader2 } from "lucide-react";
 
 const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(" ");
@@ -6,10 +6,10 @@ export { cx };
 
 type Variant = "primary" | "secondary" | "ghost" | "danger";
 const VARIANTS: Record<Variant, string> = {
-  primary: "bg-accent text-on-accent hover:brightness-110 active:brightness-95",
-  secondary: "bg-surface border border-line text-fg hover:bg-surface-hover",
-  ghost: "text-fg-2 hover:text-fg hover:bg-surface-hover",
-  danger: "bg-danger/10 text-danger border border-danger/30 hover:bg-danger/20",
+  primary: "bg-accent text-on-accent font-semibold hover:brightness-110 active:brightness-95",
+  secondary: "bg-control border border-line text-fg hover:bg-surface-hover active:opacity-90",
+  ghost: "text-fg-2 hover:text-fg hover:bg-fg/[0.06]",
+  danger: "bg-control border border-danger/40 text-danger hover:bg-danger/10",
 };
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -23,13 +23,13 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
   { variant = "secondary", size = "md", loading, icon, className, children, disabled, ...rest },
   ref,
 ) {
-  const sizes = { sm: "h-7 px-2.5 text-xs gap-1.5", md: "h-9 px-3.5 text-[13px] gap-2", lg: "h-11 px-5 text-sm gap-2" };
+  const sizes = { sm: "h-7 px-2.5 text-xs gap-1.5", md: "h-8 px-3.5 text-[13px] gap-2", lg: "h-10 px-5 text-sm gap-2" };
   return (
     <button
       ref={ref}
       disabled={disabled || loading}
       className={cx(
-        "inline-flex shrink-0 items-center justify-center rounded-lg font-medium transition-[background,filter,color,opacity] duration-150 disabled:cursor-not-allowed disabled:opacity-50",
+        "inline-flex shrink-0 items-center justify-center rounded-md font-medium transition-[background,filter,color,opacity] duration-150 disabled:cursor-not-allowed disabled:opacity-50",
         sizes[size],
         VARIANTS[variant],
         className,
@@ -47,7 +47,7 @@ export function IconButton({ label, className, children, ...rest }: ButtonHTMLAt
     <button
       aria-label={label}
       title={label}
-      className={cx("inline-flex h-8 w-8 items-center justify-center rounded-lg text-fg-2 transition-colors hover:bg-surface-hover hover:text-fg disabled:opacity-40", className)}
+      className={cx("inline-flex h-8 w-8 items-center justify-center rounded-md text-fg-2 transition-colors hover:bg-fg/[0.06] hover:text-fg disabled:opacity-40", className)}
       {...rest}
     >
       {children}
@@ -64,21 +64,26 @@ export function Toggle({ checked, onChange, disabled, label }: { checked: boolea
       disabled={disabled}
       onClick={() => onChange(!checked)}
       className={cx(
-        "relative h-5 w-9 shrink-0 rounded-full transition-colors duration-150 disabled:opacity-50",
-        checked ? "bg-accent" : "bg-line",
+        "group relative h-5 w-10 shrink-0 rounded-full border transition-colors duration-150 disabled:opacity-40",
+        checked ? "border-accent bg-accent hover:brightness-110" : "border-fg-2 bg-transparent hover:bg-fg/[0.05]",
       )}
     >
-      <span className={cx("absolute left-0 top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform duration-150", checked ? "translate-x-[18px]" : "translate-x-0.5")} />
+      <span
+        className={cx(
+          "absolute left-0 top-1/2 -translate-y-1/2 rounded-full transition-all duration-150",
+          checked ? "h-3 w-3 translate-x-[23px] bg-on-accent" : "h-3 w-3 translate-x-[3px] bg-fg-2 group-hover:h-3.5 group-hover:w-3.5 group-hover:translate-x-[2px]",
+        )}
+      />
     </button>
   );
 }
 
 const width = (c?: string) => (c && /(^|\s)w-/.test(c) ? "" : "w-full");
 const fieldBase =
-  "rounded-lg border border-line bg-bg-2 px-3 text-[13px] text-fg placeholder:text-fg-3 transition-colors focus:border-accent/60 focus:outline-none disabled:opacity-50";
+  "rounded-md border border-line border-b-fg-3/50 bg-control px-3 text-[13px] text-fg placeholder:text-fg-3 transition-colors hover:bg-surface-hover focus:border-b-accent focus:bg-bg focus:outline-none focus-visible:outline-none disabled:opacity-50";
 
 export const Input = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(function Input({ className, ...rest }, ref) {
-  return <input ref={ref} className={cx(fieldBase, width(className), "h-9", className)} {...rest} />;
+  return <input ref={ref} className={cx(fieldBase, width(className), "h-8", className)} {...rest} />;
 });
 
 export function Textarea({ className, ...rest }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
@@ -87,7 +92,7 @@ export function Textarea({ className, ...rest }: TextareaHTMLAttributes<HTMLText
 
 export function Select({ className, children, ...rest }: SelectHTMLAttributes<HTMLSelectElement>) {
   return (
-    <select className={cx(fieldBase, width(className), "h-9 cursor-pointer appearance-auto pr-2", className)} {...rest}>
+    <select className={cx(fieldBase, width(className), "h-8 cursor-pointer appearance-auto pr-2", className)} {...rest}>
       {children}
     </select>
   );
@@ -95,7 +100,7 @@ export function Select({ className, children, ...rest }: SelectHTMLAttributes<HT
 
 export function Card({ className, children, ...rest }: { className?: string; children: ReactNode } & React.HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cx("rounded-xl border border-line bg-surface", className)} {...rest}>
+    <div className={cx("rounded-lg border border-line bg-surface", className)} {...rest}>
       {children}
     </div>
   );
@@ -130,22 +135,46 @@ export function Spinner({ size = 16, className }: { size?: number; className?: s
   return <Loader2 size={size} className={cx("animate-spin text-accent", className)} />;
 }
 
+/** Inside a SettingGroup every Field is its own setting card (Windows 11 style). */
+const InGroup = createContext(false);
+
 export function Field({ label, description, children, className }: { label: ReactNode; description?: ReactNode; children: ReactNode; className?: string }) {
+  const card = useContext(InGroup);
   return (
-    <div className={cx("flex items-center justify-between gap-6 py-3", className)}>
+    <div
+      data-setting={typeof label === "string" ? label : undefined}
+      className={cx(
+        "flex items-center justify-between gap-6",
+        card ? "min-h-[64px] rounded-lg border border-line bg-surface px-4 py-3 transition-colors hover:bg-surface-hover" : "py-3",
+        className,
+      )}
+    >
       <div className="min-w-0">
-        <div className="text-[13px] font-medium text-fg">{label}</div>
-        {description && <div className="mt-0.5 text-xs text-fg-2">{description}</div>}
+        <div className="text-[13.5px] text-fg">{label}</div>
+        {description && <div className="mt-0.5 text-xs leading-relaxed text-fg-2">{description}</div>}
       </div>
       <div className="flex shrink-0 items-center gap-2">{children}</div>
     </div>
   );
 }
 
+/** A titled list of setting cards. */
+export function SettingGroup({ title, description, children }: { title: string; description?: ReactNode; children: ReactNode }) {
+  return (
+    <section className="mb-7">
+      <h2 className="mb-1 text-[15px] font-semibold text-fg">{title}</h2>
+      {description && <p className="mb-2 text-xs text-fg-2">{description}</p>}
+      <div className={cx("flex flex-col gap-1", !description && "mt-2")}>
+        <InGroup.Provider value={true}>{children}</InGroup.Provider>
+      </div>
+    </section>
+  );
+}
+
 export function SectionTitle({ children, action }: { children: ReactNode; action?: ReactNode }) {
   return (
-    <div className="mb-3 flex items-center justify-between">
-      <h2 className="text-[11px] font-semibold uppercase tracking-wider text-fg-3">{children}</h2>
+    <div className="mb-2.5 flex min-h-7 items-center justify-between">
+      <h2 className="text-[15px] font-semibold text-fg">{children}</h2>
       {action}
     </div>
   );
@@ -164,10 +193,10 @@ export function EmptyState({ icon, title, description, action }: { icon?: ReactN
 
 export function PageHeader({ title, description, actions }: { title: string; description?: string; actions?: ReactNode }) {
   return (
-    <div className="mb-6 flex items-end justify-between gap-4">
-      <div>
-        <h1 className="text-xl font-semibold tracking-tight text-fg">{title}</h1>
-        {description && <p className="mt-1 text-[13px] text-fg-2">{description}</p>}
+    <div className="mb-7 flex items-end justify-between gap-4">
+      <div className="min-w-0">
+        <h1 className="text-[28px] font-semibold leading-tight tracking-tight text-fg">{title}</h1>
+        {description && <p className="mt-1.5 max-w-2xl text-[13.5px] text-fg-2">{description}</p>}
       </div>
       {actions && <div className="flex items-center gap-2">{actions}</div>}
     </div>
@@ -176,14 +205,14 @@ export function PageHeader({ title, description, actions }: { title: string; des
 
 export function Tabs<T extends string>({ value, onChange, items }: { value: T; onChange: (v: T) => void; items: { id: T; label: string }[] }) {
   return (
-    <div className="inline-flex rounded-lg border border-line bg-bg-2 p-0.5">
+    <div className="inline-flex rounded-md border border-line bg-control p-0.5">
       {items.map((i) => (
         <button
           key={i.id}
           onClick={() => onChange(i.id)}
           className={cx(
-            "h-7 rounded-md px-3 text-xs font-medium transition-colors",
-            value === i.id ? "bg-surface text-fg shadow-sm ring-1 ring-line" : "text-fg-2 hover:text-fg",
+            "h-7 rounded px-3 text-xs font-medium transition-colors",
+            value === i.id ? "bg-fg/[0.08] text-fg" : "text-fg-2 hover:text-fg",
           )}
         >
           {i.label}

@@ -65,7 +65,7 @@ export default function Launch() {
   const flagName = (id: string | null) => (id ? flags.data?.find((f) => f.id === id)?.name ?? "Missing profile" : "Default Fast Flags");
 
   return (
-    <div className="mx-auto max-w-5xl px-8 py-8">
+    <div className="mx-auto max-w-5xl px-10 py-9">
       <PageHeader
         title="Launch"
         description="Launch Roblox with a profile. Profiles combine launch preferences with a Fast Flag configuration."

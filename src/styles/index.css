@@ -1,36 +1,40 @@
 @import "tailwindcss";
 
-/* Aeolus design tokens. Dark is the default; light overrides below. */
+/* Aeolus design tokens. Dark is the default; light overrides below.
+   Layout follows Windows 11: darker window chrome (title bar + navigation),
+   a slightly lighter content layer, and calm setting cards on top. */
 :root,
 [data-theme="dark"] {
-  --bg: #101114;
-  --bg-2: #17191e;
-  --surface: #1e2027;
-  --surface-hover: #23262e;
-  --border: #292c34;
+  --bg: #131418;          /* content layer */
+  --bg-2: #0f1013;        /* window chrome: title bar, navigation */
+  --surface: #1a1c21;     /* cards and setting rows */
+  --surface-hover: #202228;
+  --control: #1f2127;     /* inputs, selects, secondary buttons */
+  --border: #24262d;
   --text: #f4f4f5;
-  --text-2: #92949e;
-  --text-3: #656873;
+  --text-2: #9a9ca6;
+  --text-3: #686b76;
   --success: #36b37e;
   --warning: #e9a23b;
   --error: #e45b5b;
   --accent: #ff861f;
   --accent-2: #ffab45;
   --accent-contrast: #16110b;
-  --shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+  --shadow: 0 16px 40px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.04);
   color-scheme: dark;
 }
 
 [data-theme="light"] {
-  --bg: #f6f6f7;
-  --bg-2: #ffffff;
+  --bg: #f7f7f9;
+  --bg-2: #eeeef1;
   --surface: #ffffff;
-  --surface-hover: #f1f1f3;
-  --border: #e3e4e8;
+  --surface-hover: #f6f6f8;
+  --control: #ffffff;
+  --border: #e3e3e8;
   --text: #17181c;
   --text-2: #5d606b;
   --text-3: #8b8e98;
-  --shadow: 0 8px 30px rgba(20, 20, 30, 0.08);
+  --shadow: 0 16px 40px rgba(20, 20, 30, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.04);
   --accent-contrast: #ffffff;
   color-scheme: light;
 }
@@ -40,6 +44,7 @@
   --color-bg-2: var(--bg-2);
   --color-surface: var(--surface);
   --color-surface-hover: var(--surface-hover);
+  --color-control: var(--control);
   --color-line: var(--border);
   --color-fg: var(--text);
   --color-fg-2: var(--text-2);
@@ -91,6 +96,12 @@ select,
   outline: 2px solid color-mix(in srgb, var(--accent) 70%, transparent);
   outline-offset: 2px;
 }
+/* Text fields show focus with an accent underline instead (Windows 11 style). */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+}
 
 html.no-anim *,
 html.no-anim *::before,
@@ -101,7 +112,7 @@ html.no-anim *::after {
 
 .bg-glow {
   background:
-    radial-gradient(900px 380px at 85% -10%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 70%),
+    radial-gradient(700px 260px at 80% -20%, color-mix(in srgb, var(--accent) 6%, transparent), transparent 70%),
     var(--bg);
 }
 
@@ -111,7 +122,16 @@ html.no-anim *::after {
     linear-gradient(90deg, var(--border) 1px, transparent 1px);
   background-size: 32px 32px;
   background-position: -1px -1px;
-  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.35), transparent 60%);
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.25), transparent 50%);
+}
+
+/* Highlight a setting found through search. */
+@keyframes aeolus-found {
+  0%, 30% { box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 70%, transparent); }
+  100% { box-shadow: 0 0 0 2px transparent; }
+}
+.search-found {
+  animation: aeolus-found 1.8s ease-out;
 }
 
 @keyframes aeolus-drift {

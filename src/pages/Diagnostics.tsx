@@ -58,7 +58,7 @@ export default function Diagnostics() {
   ];
 
   return (
-    <div className="mx-auto flex h-full max-w-5xl flex-col px-8 py-8">
+    <div className="mx-auto flex h-full max-w-5xl flex-col px-10 py-9">
       <PageHeader
         title="Diagnostics"
         description="System details, logs and exportable reports for troubleshooting. No passwords, cookies or tokens are ever collected."

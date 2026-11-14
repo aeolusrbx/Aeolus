@@ -2,6 +2,16 @@
 
 All notable changes to Aeolus are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/) and the project uses semantic versioning.
 
+## [0.3.0] — 2026-11-14
+
+### Changed
+- **New look**: a cleaner, Windows 11–style design. Calmer colors, a darker sidebar and title bar, settings shown as simple rows, bigger page titles, and orange used only where it matters. Dark stays the default.
+- **Simpler Home**: the launch button up top, an overview of your install, shortcuts, and your recent games next to recent activity.
+- Settings sections use the same style as the main navigation.
+
+### Added
+- **Search**: a search box at the top of the sidebar finds pages and individual settings (try "fps", "discord" or "sky"). Picking a setting jumps straight to it and highlights it. Press **Ctrl+K** from anywhere.
+
 ## [0.2.0] — 2026-11-12
 
 ### Added

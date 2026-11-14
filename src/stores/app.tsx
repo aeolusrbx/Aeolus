@@ -10,7 +10,9 @@ interface AppCtx {
   settings: Settings | null;
   info: AppInfo | null;
   page: PageId;
-  navigate: (p: PageId) => void;
+  navigate: (p: PageId, target?: { section?: string; setting?: string }) => void;
+  /** Where search asked to go inside a page (a Settings section and/or a setting to highlight). */
+  target: { section?: string; setting?: string; nonce: number } | null;
   /** Persist a settings change; reverts on failure. */
   updateSettings: (fn: (s: Settings) => Settings) => Promise<boolean>;
   progress: Progress | null;
@@ -37,6 +39,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [info, setInfo] = useState<AppInfo | null>(null);
   const [page, setPage] = useState<PageId>("home");
+  const [target, setTarget] = useState<AppCtx["target"]>(null);
+  const navigate = useCallback((p: PageId, t?: { section?: string; setting?: string }) => {
+    setPage(p);
+    setTarget(t ? { ...t, nonce: Date.now() } : null);
+  }, []);
   const [progress, setProgress] = useState<Progress | null>(null);
   const [loadError, setLoadError] = useState<unknown>(null);
 
@@ -112,8 +119,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ settings, info, page, navigate: setPage, updateSettings, progress, loadError }),
-    [settings, info, page, updateSettings, progress, loadError],
+    () => ({ settings, info, page, navigate, target, updateSettings, progress, loadError }),
+    [settings, info, page, navigate, target, updateSettings, progress, loadError],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

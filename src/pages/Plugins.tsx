@@ -84,7 +84,7 @@ export default function Plugins() {
   };
 
   return (
-    <div className="mx-auto max-w-4xl px-8 py-8">
+    <div className="mx-auto max-w-4xl px-10 py-9">
       <PageHeader
         title="Plugins"
         description="Extend Aeolus with declarative plugins. Every plugin must declare its permissions and be approved before it does anything."

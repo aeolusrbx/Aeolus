@@ -62,7 +62,7 @@ export function Modal({ children, onClose, wide }: { children: ReactNode; onClos
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 8, scale: 0.98 }}
         transition={{ duration: 0.16 }}
-        className={`relative max-h-full w-full overflow-auto rounded-2xl border border-line bg-surface p-5 shadow-[var(--shadow)] ${wide ? "max-w-2xl" : "max-w-md"}`}
+        className={`relative max-h-full w-full overflow-auto rounded-xl border border-line bg-surface p-5 shadow-[var(--shadow)] ${wide ? "max-w-2xl" : "max-w-md"}`}
       >
         {children}
       </motion.div>

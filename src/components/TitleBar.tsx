@@ -3,6 +3,8 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { Copy, Minus, Square, X } from "lucide-react";
 import { api, inTauri } from "../services/api";
 import { cx } from "./ui";
+import { Logo } from "./Logo";
+import { useApp } from "../stores/app";
 
 export function TitleBar({ title }: { title: string }) {
   const [maximized, setMaximized] = useState(false);
@@ -18,13 +20,17 @@ export function TitleBar({ title }: { title: string }) {
     };
   }, []);
 
+  const { settings } = useApp();
+  const iconOnly = settings?.appearance.logoPresentation === "icon";
   const w = () => getCurrentWindow();
-  const btn = "flex h-full w-11 items-center justify-center text-fg-2 transition-colors hover:bg-surface-hover hover:text-fg";
+  const btn = "flex h-full w-12 items-center justify-center text-fg-2 transition-colors hover:bg-fg/[0.07] hover:text-fg";
 
   return (
-    <div className="flex h-9 shrink-0 select-none items-center border-b border-line bg-bg-2" data-tauri-drag-region onDoubleClick={() => inTauri() && w().toggleMaximize()}>
-      <div className="pointer-events-none pl-4 text-xs font-medium text-fg-3" data-tauri-drag-region>
-        {title}
+    <div className="flex h-11 shrink-0 select-none items-center bg-bg-2" data-tauri-drag-region onDoubleClick={() => inTauri() && w().toggleMaximize()}>
+      <div className="pointer-events-none flex items-center gap-2.5 pl-4" data-tauri-drag-region>
+        <Logo size={18} />
+        {!iconOnly && <span className="text-[12.5px] text-fg">Aeolus</span>}
+        <span className="sr-only">{title}</span>
       </div>
       <div className="flex-1" data-tauri-drag-region />
       <div className="flex h-full" onDoubleClick={(e) => e.stopPropagation()}>

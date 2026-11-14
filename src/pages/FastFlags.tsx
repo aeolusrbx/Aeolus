@@ -102,7 +102,7 @@ export default function FastFlags() {
   );
 
   return (
-    <div className="mx-auto flex h-full max-w-6xl flex-col px-8 py-8">
+    <div className="mx-auto flex h-full max-w-6xl flex-col px-10 py-9">
       <PageHeader
         title="Fast Flags"
         description="Manage ClientAppSettings overrides in separate profiles. Changes are validated and backed up automatically."
@@ -125,7 +125,7 @@ export default function FastFlags() {
         {/* profile list */}
         <div className="w-56 shrink-0">
           <div className="mb-2 flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-fg-3">Profiles</span>
+            <span className="text-[13px] font-semibold text-fg">Profiles</span>
             <IconButton
               label="New profile"
               onClick={async () => {
@@ -302,7 +302,7 @@ export default function FastFlags() {
 
           {presets.data && presets.data.length > 0 && (
             <div className="mt-5">
-              <div className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-fg-3"><Blocks size={12} /> Presets from plugins</div>
+              <div className="mb-2 flex items-center gap-1.5 text-[13px] font-semibold text-fg"><Blocks size={12} /> Presets from plugins</div>
               <div className="grid grid-cols-3 gap-2">
                 {presets.data.map((p) => (
                   <Card key={p.pluginId + p.preset.name} className="p-3">

@@ -22,7 +22,7 @@ describe("Aeolus UI", () => {
     expect(await screen.findByText("Welcome back")).toBeInTheDocument();
     expect(await screen.findByText("Launched Roblox")).toBeInTheDocument();
     expect(screen.getAllByText("0.701.0.7010921").length).toBeGreaterThan(0);
-    expect(screen.getByText("v0.1.0")).toBeInTheDocument();
+    expect(screen.getByText("Version 0.1.0")).toBeInTheDocument();
     await waitFor(() => expect(state.calls.some((c) => c.cmd === "app_ready")).toBe(true));
   });
 
@@ -174,6 +174,23 @@ describe("Aeolus UI", () => {
     await screen.findByText("Welcome back");
     fireEvent.click(screen.getByRole("button", { name: "Join the Aeolus Discord" }));
     await waitFor(() => expect(state.calls.some((c) => c.cmd === "open_link" && c.args.which === "discord")).toBe(true));
+  });
+
+  it("searches settings from the sidebar and jumps to the right one", async () => {
+    render(<App />);
+    await screen.findByText("Welcome back");
+    const box = screen.getByRole("textbox", { name: "Search Aeolus" });
+    fireEvent.change(box, { target: { value: "fps" } });
+    const option = await screen.findByRole("option", { name: /FPS cap/ });
+    expect(within(option).getByText("Launch")).toBeInTheDocument();
+    fireEvent.keyDown(box, { key: "Enter" });
+    expect(await screen.findByRole("combobox", { name: "FPS cap" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Launch", current: "page" })).toBeInTheDocument();
+    // pages are searchable too, and unknown words show a friendly message
+    fireEvent.change(box, { target: { value: "skybox" } });
+    expect(await screen.findByRole("option", { name: /Sky/ })).toBeInTheDocument();
+    fireEvent.change(box, { target: { value: "zzzz" } });
+    expect(await screen.findByText(/No results for/)).toBeInTheDocument();
   });
 
   it("sets the classic oof preset and resets it", async () => {
