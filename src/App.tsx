@@ -5,6 +5,7 @@ import { ToastProvider } from "./stores/toasts";
 import { DialogProvider } from "./stores/dialogs";
 import { MainLayout } from "./layouts/MainLayout";
 import { LoadingScreen } from "./components/LoadingScreen";
+import { LaunchMenu } from "./components/LaunchMenu";
 import { errorMessage } from "./services/api";
 import Home from "./pages/Home";
 import type { PageId } from "./types";
@@ -31,7 +32,7 @@ const PAGES: Record<PageId, React.ComponentType> = {
 };
 
 function Shell() {
-  const { settings, page, loadError } = useApp();
+  const { settings, page, loadError, mode } = useApp();
   if (loadError) {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-2 p-8 text-center">
@@ -41,6 +42,7 @@ function Shell() {
     );
   }
   if (!settings) return <LoadingScreen />;
+  if (mode === "launcher") return <LaunchMenu />;
   const Page = PAGES[page];
   const anim = settings.appearance.animations;
   return (

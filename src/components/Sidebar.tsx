@@ -8,6 +8,7 @@ import { cx } from "./ui";
 
 export const NAV: { id: PageId; label: string; icon: typeof Home }[] = [
   { id: "home", label: "Home", icon: Home },
+  { id: "settings", label: "Settings", icon: SettingsIcon },
   { id: "installations", label: "Installations", icon: Download },
   { id: "launch", label: "Launch", icon: Rocket },
   { id: "fastflags", label: "Fast Flags", icon: Flag },
@@ -15,7 +16,6 @@ export const NAV: { id: PageId; label: string; icon: typeof Home }[] = [
   { id: "customization", label: "Customization", icon: Paintbrush },
   { id: "plugins", label: "Plugins", icon: Blocks },
   { id: "diagnostics", label: "Diagnostics", icon: Stethoscope },
-  { id: "settings", label: "Settings", icon: SettingsIcon },
 ];
 
 export function Sidebar() {
@@ -58,9 +58,7 @@ export function Sidebar() {
       </div>
 
       <nav className={cx("flex flex-1 flex-col gap-0.5 overflow-y-auto px-2.5", collapsed && "px-2")} aria-label="Main">
-        {NAV.filter((n) => n.id !== "settings").map(item)}
-        <div className="flex-1" />
-        {item(NAV.find((n) => n.id === "settings")!)}
+        {NAV.map(item)}
       </nav>
 
       <div className={cx("flex items-center gap-1 px-3 py-2.5", collapsed && "flex-col px-2")}>

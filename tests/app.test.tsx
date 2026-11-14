@@ -193,6 +193,27 @@ describe("Aeolus UI", () => {
     expect(await screen.findByText(/No results for/)).toBeInTheDocument();
   });
 
+  it("opens to the launch menu and expands into the full window", async () => {
+    state.settings.general.showLaunchMenu = true;
+    render(<App />);
+    expect(await screen.findByRole("button", { name: /Launch Roblox/ })).toBeInTheDocument();
+    expect(screen.getByText("Version 0.1.0")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Play RIVALS/ })).toBeInTheDocument();
+    expect(screen.queryByRole("navigation", { name: "Main" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /Launch Roblox/ }));
+    await waitFor(() => expect(state.calls.some((c) => c.cmd === "launch_roblox")).toBe(true));
+    fireEvent.click(screen.getByRole("button", { name: /Configure settings/ }));
+    expect(await screen.findByText("Welcome back")).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Main" })).toBeInTheDocument();
+  });
+
+  it("lists Settings right under Home in the sidebar", async () => {
+    render(<App />);
+    await screen.findByText("Welcome back");
+    const labels = within(nav()).getAllByRole("button").map((b) => b.textContent);
+    expect(labels.slice(0, 3)).toEqual(["Home", "Settings", "Installations"]);
+  });
+
   it("sets the classic oof preset and resets it", async () => {
     render(<App />);
     await screen.findByText("Welcome back");

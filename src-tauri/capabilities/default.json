@@ -2,7 +2,9 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "Permissions for the Aeolus main window",
-  "windows": ["main"],
+  "windows": [
+    "main"
+  ],
   "permissions": [
     "core:default",
     "core:window:allow-minimize",
@@ -14,6 +16,12 @@
     "core:window:allow-set-focus",
     "core:window:allow-start-dragging",
     "core:window:allow-internal-toggle-maximize",
+    "core:window:allow-set-size",
+    "core:window:allow-set-min-size",
+    "core:window:allow-set-resizable",
+    "core:window:allow-center",
+    "core:window:allow-set-maximizable",
+    "core:window:allow-unmaximize",
     "dialog:allow-open",
     "dialog:allow-save",
     "notification:default"

@@ -50,6 +50,7 @@ const SETTING_KEYWORDS: Record<string, string> = {
   "Discord Rich Presence": "status activity rpc",
   "Show the game you're playing": "discord status game",
   "Theme": "dark mode light mode appearance",
+  "Show the launch menu when Aeolus opens": "launcher menu startup small window open",
   "Handle Roblox links": "website play button protocol roblox-player",
   "Crash help": "crashed crash closed unexpectedly",
   "Launch at Windows startup": "boot autostart",

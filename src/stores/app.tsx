@@ -5,12 +5,17 @@ import type { AppInfo, PageId, Progress, Settings } from "../types";
 import { lighten } from "../utils/format";
 import { useToast, type ToastLevel } from "./toasts";
 import { useChanged } from "../hooks/useResource";
+import { sizeWindow, type WindowMode } from "../services/window";
 
 interface AppCtx {
   settings: Settings | null;
   info: AppInfo | null;
   page: PageId;
   navigate: (p: PageId, target?: { section?: string; setting?: string }) => void;
+  /** "launcher" = the small launch menu shown when Aeolus opens; "manager" = the full window. */
+  mode: WindowMode;
+  /** Expand from the launch menu into the full window (optionally at a page). */
+  openManager: (p?: PageId, target?: { section?: string; setting?: string }) => void;
   /** Where search asked to go inside a page (a Settings section and/or a setting to highlight). */
   target: { section?: string; setting?: string; nonce: number } | null;
   /** Persist a settings change; reverts on failure. */
@@ -40,10 +45,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [info, setInfo] = useState<AppInfo | null>(null);
   const [page, setPage] = useState<PageId>("home");
   const [target, setTarget] = useState<AppCtx["target"]>(null);
+  const [mode, setMode] = useState<WindowMode>("manager");
   const navigate = useCallback((p: PageId, t?: { section?: string; setting?: string }) => {
     setPage(p);
     setTarget(t ? { ...t, nonce: Date.now() } : null);
   }, []);
+  const openManager = useCallback(
+    (p?: PageId, t?: { section?: string; setting?: string }) => {
+      setMode((m) => {
+        if (m !== "manager") void sizeWindow("manager");
+        return "manager";
+      });
+      if (p) navigate(p, t);
+    },
+    [navigate],
+  );
   const [progress, setProgress] = useState<Progress | null>(null);
   const [loadError, setLoadError] = useState<unknown>(null);
 
@@ -60,6 +76,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
         const [s, i] = await Promise.all([loadSettings(), api.appInfo()]);
         setInfo(i);
         setPage(s.general.defaultPage);
+        if (s.general.showLaunchMenu) {
+          setMode("launcher");
+          await sizeWindow("launcher");
+        }
         for (const n of i.startupNotes) toast.warning("Configuration recovered", n);
       } catch (e) {
         setLoadError(e);
@@ -88,13 +108,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setProgress(e.payload);
         if (e.payload.done) window.setTimeout(() => setProgress((p) => (p && p.done ? null : p)), 2500);
       }),
-      listen<string>(EVENTS.navigate, (e) => setPage(e.payload as PageId)),
+      listen<string>(EVENTS.navigate, (e) => openManager(e.payload as PageId)),
       listen<{ level: ToastLevel; title: string; description: string }>(EVENTS.toast, (e) =>
         toast.push({ level: e.payload.level, title: e.payload.title, description: e.payload.description }),
       ),
     ];
     return () => uns.forEach((p) => p.then((u) => u()));
-  }, [toast]);
+  }, [toast, openManager]);
 
   const updateSettings = useCallback(
     async (fn: (s: Settings) => Settings) => {
@@ -119,8 +139,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ settings, info, page, navigate, target, updateSettings, progress, loadError }),
-    [settings, info, page, navigate, target, updateSettings, progress, loadError],
+    () => ({ settings, info, page, navigate, target, mode, openManager, updateSettings, progress, loadError }),
+    [settings, info, page, navigate, target, mode, openManager, updateSettings, progress, loadError],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

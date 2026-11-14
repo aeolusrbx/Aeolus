@@ -101,6 +101,9 @@ export default function Settings() {
               <Field label="Launch at Windows startup" description="Registers Aeolus under your user's startup programs (HKCU Run). Turning this off removes the entry.">
                 <Toggle checked={s.general.launchAtStartup} onChange={(v) => set("general", { launchAtStartup: v })} />
               </Field>
+              <Field label="Show the launch menu when Aeolus opens" description="A small menu with Launch Roblox and Configure settings, like other bootstrappers. Turn off to open the full window right away.">
+                <Toggle checked={s.general.showLaunchMenu} onChange={(v) => set("general", { showLaunchMenu: v })} />
+              </Field>
               <Field label="Start minimized" description="Start in the system tray.">
                 <Toggle checked={s.general.startMinimized} onChange={(v) => set("general", { startMinimized: v })} />
               </Field>

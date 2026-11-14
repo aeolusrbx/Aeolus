@@ -2,6 +2,14 @@
 
 All notable changes to Aeolus are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/) and the project uses semantic versioning.
 
+## [0.3.2] — 2026-11-14
+
+### Added
+- **Launch menu**: Aeolus now opens to a small menu, like other bootstrappers, with **Launch Roblox**, **Configure settings** (opens the full window) and **Play** your last game. After launching, Aeolus tucks into the tray. Turn it off in Settings → General → "Show the launch menu when Aeolus opens".
+
+### Changed
+- **Settings** moved up in the sidebar, right under Home.
+
 ## [0.3.1] — 2026-11-14
 
 ### Changed

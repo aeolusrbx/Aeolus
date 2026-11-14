@@ -35,6 +35,8 @@ pub struct General {
     pub minimize_to_tray: bool,
     pub default_page: String,
     pub sidebar_collapsed: bool,
+    /// Open to the small launch menu (Launch Roblox / Configure settings) instead of the full window.
+    pub show_launch_menu: bool,
 }
 impl Default for General {
     fn default() -> Self {
@@ -47,6 +49,7 @@ impl Default for General {
             minimize_to_tray: false,
             default_page: "home".into(),
             sidebar_collapsed: false,
+            show_launch_menu: true,
         }
     }
 }

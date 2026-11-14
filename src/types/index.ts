@@ -24,6 +24,7 @@ export interface Settings {
     minimizeToTray: boolean;
     defaultPage: PageId;
     sidebarCollapsed: boolean;
+    showLaunchMenu: boolean;
   };
   appearance: {
     animations: Animations;

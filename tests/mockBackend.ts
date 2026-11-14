@@ -19,7 +19,7 @@ function typeOf(n: string) {
 export function createState() {
   const settings: Any = {
     schemaVersion: 1,
-    general: { theme: "dark", accent: "#FF861F", language: "en", launchAtStartup: false, startMinimized: false, minimizeToTray: false, defaultPage: "home", sidebarCollapsed: false },
+    general: { theme: "dark", accent: "#FF861F", language: "en", launchAtStartup: false, startMinimized: false, minimizeToTray: false, defaultPage: "home", sidebarCollapsed: false, showLaunchMenu: false },
     appearance: { animations: "enabled", compactNavigation: false, dashboardBackground: "glow", logoPresentation: "full", sidebarStyle: "solid" },
     installation: { customInstallRoot: null, scanOfficialInstall: true, scanOtherBootstrappers: true, backupBeforeDestructive: true, keepBackups: 10, checkUpdatesOnStartup: true, updateBeforeLaunch: true, keepDownloadCache: false },
     launch: { defaultProfileId: "p1", fpsCap: null },
